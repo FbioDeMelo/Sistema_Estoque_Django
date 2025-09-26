@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Gráficos de Estoque</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h1>Gráficos de Estoque por Setor</h1>
+
+<canvas id="estoqueChart" width="600" height="400"></canvas>
+
+<p>
+    <a href="{% url 'exportar_graficos_csv' %}">Baixar CSV</a>
+</p>
+<p><a href="{% url 'index' %}">Voltar ao Hub</a></p>
+
+<script>
+const ctx = document.getElementById('estoqueChart').getContext('2d');
+const labels = JSON.parse('{{ labels_json|escapejs }}');
+const data = JSON.parse('{{ data_json|escapejs }}');
+
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: labels,
+    datasets: [{
+      label: 'Total de Produtos por Setor',
+      data: data,
+      backgroundColor: 'rgba(54, 162, 235, 0.5)',
+      borderColor: 'rgba(54, 162, 235, 1)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: true, position: 'top' },
+      tooltip: { enabled: true }
+    },
+    scales: {
+      y: { beginAtZero: true, title: { display: true, text: 'Quantidade' } },
+      x: { title: { display: true, text: 'Setores' } }
+    }
+  }
+});
+</script>
+
+</body>
+</html>

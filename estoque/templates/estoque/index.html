@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Hub de Setores</title>
+  <style>
+    /* Reset e configurações base - técnicas consolidadas da Amazon/Facebook */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      line-height: 1.6;
+      background-color: #f8f9fa;
+      color: #333;
+    }
+
+    /* Navbar profissional com gradiente sutil */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+      color: rgb(0, 0, 0);
+      padding: 12px 20px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+
+    .navbar h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .navbar-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .navbar-links span {
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+
+    .navbar-links a {
+      color: rgb(0, 0, 0);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      background: rgba(255, 0, 0, 0.1);
+    }
+
+    .navbar-links a:hover {
+      background: rgba(251, 0, 0, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Sidebar moderno com animações suaves */
+    .sidebar {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      width: 260px;
+      height: calc(100vh - 60px);
+      background: #ffffff;
+      padding: 25px 0;
+      box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+      overflow-y: auto;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999;
+    }
+
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      color: #555;
+      padding: 12px 25px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border-left: 3px solid transparent;
+      margin: 5px 0;
+    }
+
+    .sidebar a:hover {
+      background: #f8f9fa;
+      color: #2c3e50;
+      border-left-color: #ea005f;
+      transform: translateX(5px);
+    }
+
+    .sidebar a strong {
+      font-weight: 600;
+    }
+
+    /* Conteúdo principal com layout responsivo */
+    .content {
+      margin-top: 60px;
+      margin-left: 260px;
+      padding: 30px;
+      min-height: calc(100vh - 60px);
+      transition: all 0.3s ease;
+    }
+
+    .card {
+      background: white;
+      border: none;
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      border-left: 4px solid #ea005f;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+
+    .card h2 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-size: 1.3rem;
+    }
+
+    .card p {
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    .card a {
+      display: inline-block;
+      background: #3498db;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 5px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .card a:hover {
+      background: #2980b9;
+      transform: translateY(-1px);
+    }
+
+    /* Design Responsivo - Técnicas avançadas de mobile-first */
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 10px 15px;
+      }
+      
+      .navbar h1 {
+        font-size: 1.2rem;
+      }
+      
+      .navbar-links span {
+        display: none; /* Oculta info do usuário em mobile */
+      }
+
+      /* Sidebar mobile com overlay */
+      .sidebar {
+        width: 280px;
+        transform: translateX(-100%);
+      }
+      
+      .sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      .content {
+        margin-left: 0;
+        padding: 20px 15px;
+      }
+
+      /* Botão hamburger para mobile */
+      .menu-toggle {
+        display: block;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 5px;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .menu-toggle {
+        display: none;
+      }
+    }
+
+    /* Animações e estados especiais */
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: #ddd;
+      border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: #ccc;
+    }
+
+    /* Loading state para cards */
+    .card.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* Estados de foco para acessibilidade */
+    .sidebar a:focus,
+    .navbar-links a:focus {
+      outline: 2px solid #3498db;
+      outline-offset: 2px;
+    }
+    .navbar-logo {
+    height: 42px;
+    width: auto;
+}
+.card.small-chart canvas {
+  max-height: 250px;     /* altura máxima */
+}
+.welcome {
+    font-size: 1.8rem;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+.card.quick-access {
+    border-left-color: #ea005f; /* laranja para destacar */
+}
+.card.quick-access a {
+    background: #ea005f;
+}
+  </style>
+</head>
+<body>
+<div class="navbar">
+  <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" alt="Faculdade Libano" class="navbar-logo">
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+  <div class="navbar-links">
+    <span>
+      {{ request.user.username }}
+      {% if not is_admin %}
+        – {{ request.user.groups.first.name }}
+      {% else %}
+        – Admin
+      {% endif %}
+    </span>
+    <a href="{% url 'logout' %}">Sair</a>
+  </div>
+</div>
+<div class="sidebar" id="sidebar">
+  {% if is_admin %}
+    <a href="{% url 'produtos_setor' 'todos' %}">Estoque Total</a>
+  {% else %}
+    {% for setor in hub_info %}
+      <a href="{% url 'produtos_setor' setor.nome_setor %}">
+        Estoque <strong>{{ setor.nome_setor }}</strong>
+      </a>
+    {% endfor %}
+  {% endif %}
+  <a href="{% url 'adicionar_produto' %}">Adicionar Produto</a>
+  {% if is_admin %}
+    <a href="{% url 'adicionar_usuario' %}">Adicionar Usuário</a>
+    <a href="{% url 'gerenciar_usuarios' %}">Gerenciar Usuários</a>
+  {% endif %}
+  {% if is_admin %}
+  <a href="{% url 'movimentacoes' %}">Ver Movimentações</a>
+      <a href="{% url 'dashboard_graficos' %}">Dashboard de Gráficos</a>
+{% endif %}
+        <a href="{% url 'logout' %}">Sair</a>
+</div>
+  <div class="content">
+<h1 class="welcome">Olá, {{ request.user.username }}! Seja bem-vindo!</h1>
+    {% if is_admin %}
+     <div class="card quick-access">
+    <h2>Acesso rápido ao estoque</h2>
+    <p>Total de Produtos: {{ total_produtos }}</p>
+    <a href="{% url 'produtos_setor' 'todos' %}">Ver Todos os Produtos</a>
+</div>
+    {% else %} 
+      {% for setor in hub_info %}
+        <div class="card">
+          <h2>{{ setor.nome_setor }}</h2>
+          <p>Total de Produtos: {{ setor.total_produtos }}</p>
+          <a href="{% url 'produtos_setor' setor.nome_setor %}">Ver Produtos</a>
+        </div>
+      {% endfor %}
+    {% endif %}
+    {% if is_admin %}
+    <div class="card small-chart">
+      <h2>Resumo Gráfico do Estoque</h2>
+      <canvas id="estoqueChart"></canvas>
+    </div>
+    {% endif %}
+  </div> 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('estoqueChart').getContext('2d');
+  const labels = JSON.parse('{{ chart_labels|escapejs }}');
+  const data = JSON.parse('{{ chart_data|escapejs }}');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Total de Produtos',
+        data: data,
+        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: true, position: 'top' } },
+      scales: { 
+        y: { beginAtZero: true, title: { display: true, text: 'Quantidade' } },
+        x: { title: { display: true, text: 'Setores' } }
+      }
+    }
+  });
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('mobile-open');
+  }
+  document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.querySelector('.menu-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !menuToggle.contains(event.target)) {
+      sidebar.classList.remove('mobile-open');
+    }
+  });
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function() {
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth > 768) {
+        sidebar.classList.remove('mobile-open');
+      }
+    }, 250);
+  });
+</script>

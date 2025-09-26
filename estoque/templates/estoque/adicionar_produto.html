@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Adicionar Produto</title>
+    <style>
+        /* ESTILOS CONSISTENTES COM O DESIGN ANTERIOR */
+        
+        /* Reset e configurações base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        /* NAVBAR IDÊNTICA */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+      color: rgb(0, 0, 0);
+      padding: 12px 20px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+
+    .navbar h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .navbar-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .navbar-links span {
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+
+    .navbar-links a {
+      color: rgb(0, 0, 0);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      background: rgba(255, 0, 0, 0.1);
+    }
+
+    .navbar-links a:hover {
+      background: rgba(251, 0, 0, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Sidebar moderno com animações suaves */
+    .sidebar {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      width: 260px;
+      height: calc(100vh - 60px);
+      background: #ffffff;
+      padding: 25px 0;
+      box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+      overflow-y: auto;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999;
+    }
+
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      color: #555;
+      padding: 12px 25px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border-left: 3px solid transparent;
+      margin: 5px 0;
+    }
+
+    .sidebar a:hover {
+      background: #f8f9fa;
+      color: #2c3e50;
+      border-left-color: #ea005f;
+      transform: translateX(5px);
+    }
+
+    .sidebar a strong {
+      font-weight: 600;
+    }
+        /* CONTEÚDO PRINCIPAL */
+        .content {
+            margin-top: 60px;
+            margin-left: 260px;
+            padding: 30px;
+            min-height: calc(100vh - 60px);
+            transition: margin-left 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* FORM CONTAINER REDUZIDO */
+        .form-container {
+            background: white;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px; /* Reduzido de 40px */
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 25px; /* Reduzido */
+        }
+
+        .page-header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem; /* Reduzido de 2rem */
+            margin-bottom: 8px; /* Reduzido */
+            font-weight: 600;
+        }
+
+        .page-header p {
+            color: #666;
+            font-size: 1rem; /* Reduzido de 1.1rem */
+            line-height: 1.4;
+        }
+
+        /* ESTILIZAÇÃO DO FORMULÁRIO DJANGO */
+        .form-group {
+            margin-bottom: 20px; /* Reduzido de 25px */
+            text-align: left;
+        }
+
+        .form-group p {
+            margin-bottom: 12px; /* Reduzido */
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px; /* Reduzido */
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.9rem; /* Reduzido */
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px; /* Reduzido */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.95rem; /* Reduzido */
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        textarea.form-control {
+            min-height: 80px; /* Reduzido de 100px */
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        select.form-control {
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Campo de setor especial para admin */
+        .campo-setor {
+            background: #f0f7ff;
+            padding: 12px; /* Reduzido */
+            border-radius: 6px; /* Reduzido */
+            border-left: 3px solid #3498db; /* Reduzido */
+            margin-bottom: 15px; /* Reduzido */
+        }
+
+        .campo-setor label {
+            color: #1a73e8;
+            font-weight: 600;
+            font-size: 0.9rem; /* Reduzido */
+        }
+
+        .admin-badge {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 1px 6px; /* Reduzido */
+            border-radius: 3px; /* Reduzido */
+            font-size: 0.7rem; /* Reduzido */
+            margin-left: 6px; /* Reduzido */
+            vertical-align: middle;
+        }
+
+        /* Botão com o mesmo estilo */
+        .submit-btn {
+            background: #ea005f;
+            color: white;
+            border: none;
+            padding: 12px 25px; /* Reduzido */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95rem; /* Reduzido */
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px; /* Reduzido */
+        }
+
+        .submit-btn:hover {
+            background: #ad0146;
+            transform: translateY(-2px);
+        }
+
+        /* Link de voltar */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px; /* Reduzido */
+            color: #3498db;
+            text-decoration: none;
+            margin-top: 20px; /* Reduzido */
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-align: center;
+            width: 100%;
+            justify-content: center;
+            padding: 8px; /* Reduzido */
+            font-size: 0.9rem; /* Reduzido */
+        }
+
+        .back-link:hover {
+            color: #2980b9;
+            transform: translateX(-3px);
+        }
+
+        /* Mensagens de sucesso/erro */
+        .messages {
+            margin-bottom: 15px; /* Reduzido */
+        }
+
+        .alert {
+            padding: 10px 12px; /* Reduzido */
+            border-radius: 5px;
+            margin-bottom: 12px; /* Reduzido */
+            font-size: 0.9rem; /* Reduzido */
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Estilo para campos obrigatórios */
+        .field-required label::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 10px 15px;
+            }
+            
+            .navbar h1 {
+                font-size: 1.2rem;
+            }
+            
+            .navbar-links span {
+                display: none;
+            }
+
+            .sidebar {
+                width: 280px;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 20px 15px;
+                align-items: flex-start;
+            }
+
+            .form-container {
+                padding: 20px; /* Reduzido para mobile */
+                max-width: 100%;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem; /* Ajustado para mobile */
+            }
+
+            .menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: white;
+                font-size: 1.5rem;
+                cursor: pointer;
+                padding: 5px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 15px; /* Mais reduzido para telas pequenas */
+            }
+            
+            .page-header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .page-header p {
+                font-size: 0.9rem;
+            }
+            
+            .form-control {
+                padding: 8px 10px;
+            }
+            
+            .submit-btn {
+                padding: 10px 20px;
+            }
+        }
+
+        /* Scrollbar customizada para sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #ccc;
+        }
+
+        /* Melhor alinhamento do conteúdo */
+        .content {
+            min-height: calc(100vh - 60px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+            .navbar-logo {
+    height: 42px;
+    width: auto;
+}
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+<div class="navbar">
+    <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" alt="Faculdade Libano" class="navbar-logo">
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="navbar-links">
+        <span>{{ request.user.username }} {% if not is_admin %} – {{ request.user.groups.first.name }} {% else %} – Admin {% endif %}</span>
+        <a href="{% url 'logout' %}">Sair</a>
+    </div>
+</div>
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <a href="{% url 'index' %}">Início</a>
+        {% if is_admin %}
+            <a href="{% url 'produtos_setor' 'todos' %}">Estoque Total</a>
+        {% else %}
+            {% for setor in hub_info %}
+                <a href="{% url 'produtos_setor' setor.nome_setor %}">
+                    Estoque <strong>{{ setor.nome_setor }}</strong>
+                </a>
+            {% endfor %}
+        {% endif %}
+
+        <a href="{% url 'adicionar_produto' %}">Adicionar Produto</a>
+
+        {% if is_admin %}
+            <a href="{% url 'adicionar_usuario' %}">Adicionar Usuário</a>
+            <a href="{% url 'gerenciar_usuarios' %}">Gerenciar Usuários</a>
+        {% endif %}
+
+        <a href="{% url 'logout' %}">Sair</a>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="content">
+        <div class="form-container">
+            <div class="page-header">
+                <h1>Adicionar Novo Produto</h1>
+                <p>Preencha os dados do produto para adicioná-lo ao estoque</p>
+            </div>
+
+            <!-- Exibir mensagens -->
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Campos do formulário Django com estilização -->
+                {% for field in form %}
+                    <div class="form-group {% if field.field.required %}field-required{% endif %}">
+                        {% if field.name == 'setor' and is_admin %}
+                            <div class="campo-setor">
+                                <label for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                    <span class="admin-badge">Admin</span>
+                                </label>
+                                {{ field }}
+                            </div>
+                        {% else %}
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                        {% endif %}
+                        
+                        {% if field.help_text %}
+                            <small style="color: #666; font-size: 0.8rem; display: block; margin-top: 4px;">
+                                {{ field.help_text }}
+                            </small>
+                        {% endif %}
+                        
+                        {% if field.errors %}
+                            <div style="color: #e74c3c; font-size: 0.8rem; margin-top: 4px;">
+                                {% for error in field.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="submit-btn">Adicionar Produto</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Mesma lógica JavaScript do primeiro código para responsividade
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Fechar sidebar ao clicar fora (mobile)
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !menuToggle.contains(event.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        // Aplicar classes de estilo aos campos do formulário Django
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aplicar classe form-control a todos os inputs, selects e textareas
+            const formFields = document.querySelectorAll('input, select, textarea');
+            formFields.forEach(field => {
+                field.classList.add('form-control');
+            });
+
+            // Adicionar placeholders se não existirem
+            formFields.forEach(field => {
+                if (!field.getAttribute('placeholder') && field.type !== 'submit') {
+                    const label = document.querySelector(`label[for="${field.id}"]`);
+                    if (label) {
+                        field.setAttribute('placeholder', `Digite ${label.textContent.toLowerCase()}`);
+                    }
+                }
+            });
+
+            // Focar no primeiro campo do formulário
+            const firstField = document.querySelector('input:not([type="hidden"]), select, textarea');
+            if (firstField) {
+                firstField.focus();
+            }
+
+            // Validação em tempo real para campos numéricos
+            const quantityField = document.querySelector('input[type="number"]');
+            if (quantityField) {
+                quantityField.addEventListener('input', function(e) {
+                    if (e.target.value < 0) {
+                        e.target.value = 0;
+                    }
+                });
+            }
+        });
+
+        // Otimização de performance: debounce para resize
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                const sidebar = document.getElementById('sidebar');
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            }, 250);
+        });
+    </script>
+</body>
+</html>
