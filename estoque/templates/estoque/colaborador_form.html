@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+ <!DOCTYPE html>
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <title>Gráficos de Estoque</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <title>Cadastrar Colaborador</title>
     <style>
         /* ESTILOS CONSISTENTES COM O DESIGN ANTERIOR */
         
@@ -118,10 +115,6 @@
             transform: translateX(5px);
         }
 
-        .sidebar a strong {
-            font-weight: 600;
-        }
-
         /* CONTEÚDO PRINCIPAL */
         .content {
             margin-top: 66px;
@@ -129,23 +122,31 @@
             padding: 30px;
             min-height: calc(100vh - 66px);
             transition: margin-left 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
 
-        /* HEADER DA PÁGINA */
-        .page-header {
+        /* FORM CONTAINER */
+        .form-container {
             background: white;
-            padding: 25px 30px;
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-            border-left: 4px solid #ea005f;
+        }
+
+        .page-header {
             text-align: center;
+            margin-bottom: 25px;
         }
 
         .page-header h1 {
             color: #2c3e50;
             font-size: 1.8rem;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -153,83 +154,108 @@
             gap: 10px;
         }
 
+        .page-header h1::before {
+            content: "👤";
+            font-size: 1.2em;
+        }
+
         .page-header p {
             color: #666;
             font-size: 1rem;
         }
 
-        /* GRID DE GRÁFICOS */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border-left: 4px solid #ea005f;
-        }
-
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-        }
-
-        .card h3 {
-            color: #2c3e50;
+        /* ESTILIZAÇÃO DO FORMULÁRIO */
+        .form-group {
             margin-bottom: 20px;
-            font-size: 1.2rem;
-            font-weight: 600;
+            text-align: left;
+        }
+
+        .form-group p {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            border-color: #ea005f;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(234, 0, 95, 0.1);
+        }
+
+        select.form-control {
+            background: white;
+            cursor: pointer;
+        }
+
+        /* BOTÃO */
+        .submit-btn {
+            background: #ea005f;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
         }
 
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-
-        canvas {
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        /* LINKS DE AÇÃO */
-        .action-links {
-            text-align: center;
-            margin-top: 30px;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-
-        .action-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #ea005f;
-            text-decoration: none;
-            padding: 10px 20px;
-            margin: 0 10px;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            background: #f8f9fa;
-        }
-
-        .action-link:hover {
-            color: #c4004b;
-            background: #e9ecef;
+        .submit-btn:hover {
+            background: #c4004b;
             transform: translateY(-2px);
-            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(234, 0, 95, 0.3);
+        }
+
+        /* MENSAGENS DE ERRO/SUCESSO */
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 10px 12px;
+            border-radius: 5px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* ESTILO PARA CAMPOS OBRIGATÓRIOS */
+        .field-required label::after {
+            content: " *";
+            color: #e74c3c;
         }
 
         /* RESPONSIVIDADE */
@@ -263,20 +289,7 @@
                 margin-top: 62px;
             }
 
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .card {
-                padding: 20px;
-            }
-
-            .chart-container {
-                height: 250px;
-            }
-
-            .page-header {
+            .form-container {
                 padding: 20px;
             }
 
@@ -293,16 +306,6 @@
                 cursor: pointer;
                 padding: 5px;
             }
-
-            .action-links {
-                padding: 15px;
-            }
-
-            .action-link {
-                display: block;
-                margin: 10px 0;
-                text-align: center;
-            }
         }
 
         @media (min-width: 769px) {
@@ -312,24 +315,24 @@
         }
 
         @media (max-width: 480px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .card {
+            .form-container {
                 padding: 15px;
-            }
-            
-            .chart-container {
-                height: 200px;
             }
             
             .page-header h1 {
                 font-size: 1.3rem;
             }
-
+            
             .navbar-logo {
                 height: 35px;
+            }
+            
+            .form-control {
+                padding: 8px 10px;
+            }
+            
+            .submit-btn {
+                padding: 10px 20px;
             }
         }
 
@@ -347,17 +350,34 @@
             background: #ccc;
         }
 
-        /* Ícones nos títulos */
-        .card h3::before {
-            font-size: 1.1em;
+        /* Link de voltar */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #ea005f;
+            text-decoration: none;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-align: center;
+            width: 100%;
+            justify-content: center;
+            padding: 8px;
+            font-size: 0.9rem;
         }
-    .sidebar a i {
+
+        .back-link:hover {
+            color: #c4004b;
+            transform: translateX(-3px);
+        }
+        .sidebar a i {
   margin-right: 8px; /* ajusta o espaço entre ícone e texto */
 }
     </style>
 </head>
 <body>
-    <!-- NAVBAR COM LOGO -->
+    <!-- NAVBAR -->
     <div class="navbar">
         <div class="navbar-brand">
             <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" alt="Faculdade Libano" class="navbar-logo">
@@ -375,6 +395,7 @@
             <a href="{% url 'logout' %}">Sair</a>
         </div>
     </div>
+
     <!-- SIDEBAR IDÊNTICO AO PRIMEIRO CÓDIGO -->
 <div class="sidebar" id="sidebar">
 <a href="{% url 'index' %}"><i class="fas fa-home"></i> Início</a>
@@ -403,158 +424,59 @@
   {% endif %}
   <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
 </div>
-
-    <!-- CONTEÚDO PRINCIPAL -->
     <div class="content">
-            <h1>📊 Dashboard de Estoque</h1>
-            <p>Visualizações gráficas do estoque e movimentações</p>
-        <div class="grid">
-            <div class="card">
-                <h3>Produtos por Setor</h3>
-                <div class="chart-container">
-                    <canvas id="estoqueChart"></canvas>
-                </div>
+        <div class="form-container">
+            <div class="page-header">
+                <h1>Cadastrar Colaborador</h1>
+                <p>Adicione um novo colaborador ao sistema</p>
             </div>
 
-            <div class="card">
-                <h3>Distribuição Percentual</h3>
-                <div class="chart-container">
-                    <canvas id="pieChart"></canvas>
+            <!-- Exibir mensagens -->
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
                 </div>
+                {% endfor %}
             </div>
+            {% endif %}
 
-            <div class="card">
-                <h3>Entradas x Saídas</h3>
-                <div class="chart-container">
-                    <canvas id="barStacked"></canvas>
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Campos do formulário Django com estilização -->
+                {% for field in form %}
+                <div class="form-group {% if field.field.required %}field-required{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small style="color: #666; font-size: 0.8rem; display: block; margin-top: 4px;">
+                            {{ field.help_text }}
+                        </small>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div style="color: #e74c3c; font-size: 0.8rem; margin-top: 4px;">
+                            {% for error in field.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
-            </div>
+                {% endfor %}
 
-            <div class="card">
-                <h3>Movimentações por Mês</h3>
-                <div class="chart-container">
-                    <canvas id="lineChart"></canvas>
-                </div>
-            </div>
+                <button type="submit" class="submit-btn">
+                    👤 Cadastrar Colaborador
+                </button>
+            </form>
+
+            <a href="{% url 'index' %}" class="back-link">
+                ← Voltar ao Hub
+            </a>
         </div>
+    </div>
 
     <script>
-        // MESMO JAVASCRIPT ORIGINAL - SEM ALTERAÇÕES
-        const labels = JSON.parse('{{ labels_json|default:"[]"|escapejs }}');
-        const data = JSON.parse('{{ data_json|default:"[]"|escapejs }}');
-        const entradas = JSON.parse('{{ entradas_json|default:"[]"|escapejs }}');
-        const saidas = JSON.parse('{{ saidas_json|default:"[]"|escapejs }}');
-        const meses = JSON.parse('{{ movimentacoes_meses|default:"[]"|escapejs }}');
-        const movimentacoes = JSON.parse('{{movimentacoes_valores|default:"[]"|escapejs }}');
-
-        // ===== Gráfico 1: Barras (produtos por setor) =====
-        const ctxBar = document.getElementById('estoqueChart').getContext('2d');
-        new Chart(ctxBar, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Total de Produtos por Setor',
-                    data: data,
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: true }, tooltip: { enabled: true } },
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Quantidade' } },
-                    x: { title: { display: true, text: 'Setores' } }
-                }
-            }
-        });
-
-        // ===== Gráfico 2: Pizza (percentual por setor) =====
-        const ctxPie = document.getElementById('pieChart').getContext('2d');
-        new Chart(ctxPie, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: ['#36a2eb','#ff6384','#ffcd56','#4bc0c0','#9966ff']
-                }]
-            },
-            options: { responsive: true }
-        });
-
-        // ===== Gráfico 3: Barras empilhadas (entradas x saídas) =====
-        const ctxStacked = document.getElementById('barStacked').getContext('2d');
-        new Chart(ctxStacked, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Entradas', data: entradas, backgroundColor: 'rgba(75, 192, 192, 0.7)' },
-                    { label: 'Saídas', data: saidas, backgroundColor: 'rgba(255, 99, 132, 0.7)' }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: true } },
-                scales: { 
-                    x: { stacked: true },
-                    y: { stacked: true, beginAtZero: true }
-                }
-            }
-        });
-
-        function chartOptionsLine(validData) {
-            return {
-                responsive: true,
-                maintainAspectRatio: true,
-                scales: {
-                    y: { beginAtZero: true, suggestedMax: Math.max(...validData.map(i=>i.value))*1.1, grid:{color:'rgba(0,0,0,0.05)'} },
-                    x: { grid: { display: false } }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { backgroundColor:'#333', titleFont:{size:14,weight:'bold'}, bodyFont:{size:12}, padding:12, cornerRadius:6 }
-                }
-            };
-        }
-
-        // ===== Gráfico 4: Linha (movimentações ao longo do tempo) =====
-        function criarLinhaChart(canvasId, label, labels, valores) {
-            if (!Array.isArray(labels)) labels = [];
-            if (!Array.isArray(valores)) valores = [];
-
-            const validData = labels.map((l, i) => ({ label: l, value: valores[i] || 0 }))
-                                    .filter(item => item.value > 0);
-
-            const ctxLine = document.getElementById(canvasId).getContext('2d');
-            return new Chart(ctxLine, {
-                type: 'line',
-                data: {
-                    labels: validData.map(i => i.label),
-                    datasets: [{
-                        label: label,
-                        data: validData.map(i => i.value),
-                        fill: false,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        tension: 0.3,
-                        fill: true,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#1e88e5',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        spanGaps: true
-                    }]
-                },
-                options: chartOptionsLine(validData)
-            });
-        }
-
-        criarLinhaChart('lineChart','Movimentações Mensais',meses,movimentacoes);
-
         // FUNÇÕES DE RESPONSIVIDADE DO SISTEMA
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -572,6 +494,31 @@
             }
         });
 
+        // Aplicar classes de estilo aos campos do formulário Django
+        document.addEventListener('DOMContentLoaded', function() {
+            const formFields = document.querySelectorAll('input, select, textarea');
+            formFields.forEach(field => {
+                field.classList.add('form-control');
+            });
+
+            // Adicionar placeholders se não existirem
+            formFields.forEach(field => {
+                if (!field.getAttribute('placeholder') && field.type !== 'submit') {
+                    const label = document.querySelector(`label[for="${field.id}"]`);
+                    if (label) {
+                        field.setAttribute('placeholder', `Digite ${label.textContent.toLowerCase()}`);
+                    }
+                }
+            });
+
+            // Focar no primeiro campo do formulário
+            const firstField = document.querySelector('input:not([type="hidden"]), select, textarea');
+            if (firstField) {
+                firstField.focus();
+            }
+        });
+
+        // Otimização de performance: debounce para resize
         let resizeTimeout;
         window.addEventListener('resize', function() {
             clearTimeout(resizeTimeout);

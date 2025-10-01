@@ -54,3 +54,28 @@ class LeituraNotificacao(models.Model):
 
     class Meta:
         unique_together = ('notificacao', 'usuario')
+
+
+class Setor(models.Model):
+    nome_setor = models.CharField(max_length=100, default='Sem Nome')
+
+    def __str__(self):
+        return self.nome_setor
+
+
+class Colaborador(models.Model):
+    codigo = models.CharField(max_length=20, unique=True)
+    nome = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.codigo} - {self.nome}"
+
+
+class Protocolo(models.Model):
+    colaborador = models.ForeignKey(Colaborador, on_delete=models.CASCADE)
+    item = models.CharField(max_length=100)
+    patrimonio = models.CharField(max_length=50)
+    data = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.colaborador} - {self.item} ({self.patrimonio})"

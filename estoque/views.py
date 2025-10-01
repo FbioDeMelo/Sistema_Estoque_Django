@@ -8,15 +8,19 @@ from django.http import JsonResponse
 from .models import Movimentacao
 import csv
 import json
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.http import HttpResponse
 from django.db.models import Sum
 from django.contrib.auth.decorators import user_passes_test
+from django.core.paginator import Paginator
+
 # -------------------- View do Estoque --------------------
 @login_required(login_url='login')
 def index(request):
     user_groups = request.user.groups.all()
     is_admin = request.user.groups.filter(name='ADMIN').exists() or request.user.is_superuser
+    pertence_geral = request.user.groups.filter(name__iexact='Geral').exists()
 
     if is_admin:
         setores = Group.objects.all()
@@ -43,8 +47,8 @@ def index(request):
     return render(request, 'estoque/index.html', {
         'hub_info': hub_info,
         'is_admin': is_admin,
+        'pertence_geral': pertence_geral,   # ✅ agora o template sabe se o usuário é do Geral
         'total_produtos': total_produtos,
-        # >>> AQUI <<<
         'chart_labels': json.dumps(chart_labels),
         'chart_data': json.dumps(chart_data),
     })
@@ -70,21 +74,14 @@ def adicionar_usuario(request):
     else:
         form = UsuarioForm()
 
-    # Contexto extra para sidebar
-    user_groups = request.user.groups.all()
-    is_admin_flag = request.user.groups.filter(name='ADMIN').exists() or request.user.is_superuser
-    if is_admin_flag:
-        setores = Group.objects.all()
-    else:
-        setores = user_groups
-    hub_info = [{'nome_setor': s.name, 'total_produtos': Produto.objects.filter(setor_responsavel=s).count()} for s in setores]
-
-    return render(request, 'estoque/adicionar_usuario.html', {
+    # 🔹 monta o contexto principal
+    context = {
         'form': form,
-        'is_admin': is_admin_flag,
-        'hub_info': hub_info
-    })
+    }
+    # 🔹 adiciona o contexto do sidebar
+    context.update(get_sidebar_context(request))
 
+    return render(request, 'estoque/adicionar_usuario.html', context)
 @login_required(login_url='login')
 def adicionar_produto(request):
     is_admin = request.user.groups.filter(name='ADMIN').exists() or request.user.is_superuser
@@ -139,13 +136,19 @@ def produtos_setor(request, setor):
     user_groups = request.user.groups.all()
     is_admin = request.user.groups.filter(name='ADMIN').exists() or request.user.is_superuser
 
+    # só deixa acessar se o usuário tem permissão
     if not is_admin and setor not in [g.name for g in user_groups]:
         return redirect('index')
 
     if is_admin and setor == 'todos':
-        produtos = Produto.objects.all()
+        produtos_qs = Produto.objects.all().order_by('nome')
     else:
-        produtos = Produto.objects.filter(setor_responsavel__name=setor)
+        produtos_qs = Produto.objects.filter(setor_responsavel__name=setor).order_by('nome')
+
+    # === PAGINAÇÃO ===
+    paginator = Paginator(produtos_qs, 15)  # 15 produtos por página
+    page_number = request.GET.get('page')
+    produtos_page = paginator.get_page(page_number)
 
     # Prepara hub_info para a sidebar
     if is_admin:
@@ -155,17 +158,18 @@ def produtos_setor(request, setor):
 
     hub_info = []
     for s in setores:
-        produtos_setor = Produto.objects.filter(setor_responsavel=s)
+        produtos_setor_qs = Produto.objects.filter(setor_responsavel=s)
         hub_info.append({
             'nome_setor': s.name,
-            'total_produtos': produtos_setor.count()
+            'total_produtos': produtos_setor_qs.count()
         })
 
     context = {
-        'produtos': produtos,
+        'produtos': produtos_page,  # <<< passa a página, não o queryset inteiro
         'setor': setor,
         'is_admin': is_admin,
         'hub_info': hub_info,
+        'setores': setores,  # para o filtro do template
     }
     return render(request, 'estoque/produtos.html', context)
 
@@ -174,25 +178,34 @@ def produtos_setor(request, setor):
 @login_required(login_url='login')
 @user_passes_test(is_admin)
 def gerenciar_usuarios(request):
+    # ------------------ POST (edição via modal) ------------------
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
         usuario = get_object_or_404(User, id=user_id)
-        form = UsuarioForm(request.POST, instance=usuario)
-        if form.is_valid():
-            usuario.username = form.cleaned_data['username']
-            usuario.email = form.cleaned_data['email']
-            if form.cleaned_data['senha']:
-                usuario.set_password(form.cleaned_data['senha'])
-            usuario.save()
-            grupo = form.cleaned_data['grupo']
-            usuario.groups.clear()
-            usuario.groups.add(grupo)
-            return redirect('gerenciar_usuarios')
 
+        # Atualiza campos diretamente do POST
+        usuario.username = request.POST.get('username')
+        usuario.email = request.POST.get('email')
+
+        senha = request.POST.get('senha')
+        if senha:
+            usuario.set_password(senha)  # altera apenas se preenchido
+
+        usuario.save()
+
+        # Atualiza grupo
+        grupo_id = request.POST.get('grupo')
+        grupo = get_object_or_404(Group, id=grupo_id)
+        usuario.groups.clear()
+        usuario.groups.add(grupo)
+
+        return redirect('gerenciar_usuarios')
+
+    # ------------------ GET (exibir lista) ------------------
     usuarios = User.objects.all()
     grupos = Group.objects.all()
 
-    # Adicionando hub_info e is_admin para a sidebar
+    # Contexto para sidebar (mantendo padrão)
     user_groups = request.user.groups.all()
     is_admin_flag = request.user.groups.filter(name='ADMIN').exists() or request.user.is_superuser
 
@@ -218,6 +231,15 @@ def gerenciar_usuarios(request):
 
     return render(request, 'estoque/gerenciar_usuarios.html', context)
 
+
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+
+def logout_view(request):
+    logout(request)  # remove a sessão do usuário
+    return redirect('login')  # redireciona para a tela de login
 @login_required(login_url='login')
 @require_POST
 def retirar_item(request, produto_id):
@@ -262,7 +284,7 @@ def retirar_item(request, produto_id):
 @login_required(login_url='login')
 @user_passes_test(is_admin)
 def movimentacoes(request):
-    movs = Movimentacao.objects.select_related('produto','usuario').order_by('-data')
+    movs = Movimentacao.objects.select_related('produto', 'usuario').order_by('-data')
 
     # filtros
     usuario = request.GET.get('usuario')
@@ -282,7 +304,21 @@ def movimentacoes(request):
     if data_fim:
         movs = movs.filter(data__date__lte=data_fim)
 
-    return render(request, 'estoque/movimentacoes.html', {'movimentacoes': movs})
+    # === PAGINAÇÃO ===
+    paginator = Paginator(movs, 10)  # 10 itens por página
+    page_number = request.GET.get('page')
+    movs_page = paginator.get_page(page_number)
+
+    # === INFO EXTRA PARA A SIDEBAR ===
+    hub_info = [{'nome_setor': g.name} for g in Group.objects.all()]
+
+    # Passa para o template
+    return render(request, 'estoque/movimentacoes.html', {
+        'movimentacoes': movs_page,
+        'setores': Group.objects.all(),
+        'hub_info': hub_info,
+        'is_admin': request.user.is_superuser,  # controla a exibição dos links de admin
+    })
 
 @login_required(login_url='login')
 @user_passes_test(is_admin)
@@ -317,13 +353,19 @@ def exportar_movimentacoes(request):
         writer.writerow([mov.data.strftime("%d/%m/%Y %H:%M"), mov.usuario.username, mov.produto.nome, mov.get_tipo_display(), mov.quantidade, mov.observacao])
 
     return response
-     
+from django.db.models.functions import TruncMonth, TruncDay
+from django.db.models import Count
+from django.utils import timezone
+from datetime import datetime, timedelta, date, time
+import calendar
+from .models import Produto, Movimentacao, Setor 
 @login_required(login_url='login')
-@user_passes_test(is_admin)
-def dashboard_graficos(request):
+@user_passes_test(is_admin, login_url='login')  # redireciona para login se não for admin
+def dashboard_graficos(request, periodo='all'):
     """
     Tela de gráficos do Admin com total de produtos por setor.
     """
+
     # Consulta: total de produtos por setor
     produtos_por_setor = (
         Produto.objects
@@ -336,12 +378,58 @@ def dashboard_graficos(request):
     chart_labels = [p['setor_responsavel__name'] for p in produtos_por_setor]
     chart_data = [p['total'] for p in produtos_por_setor]
 
-    context = {
-    'produtos_por_setor': produtos_por_setor,
-    'labels_json': json.dumps(chart_labels),
-    'data_json': json.dumps(chart_data),
-}
+    hoje = timezone.now().date()
 
+    # Determina data inicial e função de trunc
+    if periodo == "7":
+        inicio = hoje - timedelta(days=7)
+        trunc_func = TruncDay
+    elif periodo == "30":
+        inicio = hoje - timedelta(days=30)
+        trunc_func = TruncDay
+    elif periodo == "mes":
+        inicio = hoje.replace(day=1)
+        trunc_func = TruncDay
+    else:
+        inicio = None
+        trunc_func = TruncMonth
+
+    def aplicar_filtro(queryset, campo="data"):
+        if inicio:
+            filtro = {f"{campo}__gte": inicio}
+            return queryset.filter(**filtro)
+        return queryset
+
+    def gerar_dados_linha(queryset, campo="data"):
+        queryset = queryset.filter(**{f"{campo}__isnull": False})
+        qs = aplicar_filtro(queryset, campo=campo)\
+            .annotate(data_trunc=trunc_func(campo))\
+            .values("data_trunc")\
+            .annotate(total=Count("id"))\
+            .order_by("data_trunc")
+
+        labels, valores = [], []
+        for item in qs:
+            data = item["data_trunc"]
+            if periodo == "all":
+                labels.append(f"{calendar.month_abbr[data.month]} {data.year}")
+            else:
+                labels.append(data.strftime("%d/%m"))
+            valores.append(item["total"])
+        return labels, valores
+
+    moviment_label, moviment_values = gerar_dados_linha(Movimentacao.objects)
+
+    # Contexto para o template (sidebar precisa de is_admin e hub_info)
+    context = {
+        'is_admin': True,  # porque esse view é só admin
+        'hub_info': Setor.objects.all(),  # ou a lógica para os setores do usuário
+        'produtos_por_setor': produtos_por_setor,
+        'labels_json': json.dumps(chart_labels),
+        'data_json': json.dumps(chart_data),
+        'movimentacoes_valores': json.dumps(moviment_values),
+        'movimentacoes_meses': json.dumps(moviment_label),
+    }
 
     return render(request, 'estoque/graficos.html', context)
 
@@ -373,3 +461,145 @@ def listar_produtos(request):
         'produtos': produtos,
         'setores': setores,
     })
+
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Protocolo, Produto
+from .forms import ProtocoloForm
+
+@login_required(login_url='login')
+def protocolo_create(request):
+    if request.method == 'POST':
+        form = ProtocoloForm(request.POST)
+        if form.is_valid():
+            protocolo = form.save(commit=False)
+            produto = protocolo.item
+
+            if isinstance(produto, str):
+                try:
+                    produto = Produto.objects.get(nome=produto)
+                except Produto.DoesNotExist:
+                    messages.error(request, "Produto não encontrado!")
+                    return redirect('protocolo_create')
+
+            if produto.quantidade > 0:
+                produto.quantidade -= 1
+                produto.save()
+            else:
+                messages.error(request, "Estoque insuficiente!")
+                return redirect('protocolo_create')
+
+            protocolo.item = produto
+            protocolo.save()
+            messages.success(request, 'Item registrado e debitado do estoque!')
+            return redirect('protocolo_create')
+    else:
+        form = ProtocoloForm()
+
+    # ✅ adiciona contexto da sidebar
+    context = {'form': form}
+    context.update(get_sidebar_context(request))
+
+    return render(request, 'estoque/protocolo.html', context)
+
+
+from .forms import ColaboradorForm
+
+def colaborador_create(request):
+    if request.method == 'POST':
+        form = ColaboradorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Colaborador cadastrado com sucesso!')
+            return redirect('colaborador_create')
+    else:
+        form = ColaboradorForm()
+
+    # ✅ adiciona contexto da sidebar
+    context = {'form': form}
+    context.update(get_sidebar_context(request))
+
+    return render(request, 'estoque/colaborador_form.html', context)
+
+
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from .models import Colaborador, Protocolo
+
+from django.core.paginator import Paginator
+from django.db.models import Q
+
+@login_required
+def lista_colaboradores(request):
+    query = request.GET.get('q', '')
+    colaboradores = Colaborador.objects.all()
+
+    if query:
+        colaboradores = colaboradores.filter(
+            Q(nome__icontains=query) | Q(codigo__icontains=query)
+        )
+
+    paginator = Paginator(colaboradores, 15)
+    page_number = request.GET.get('page')
+    colaboradores_page = paginator.get_page(page_number)
+
+    # ✅ adiciona contexto da sidebar
+    context = {'colaboradores': colaboradores_page}
+    context.update(get_sidebar_context(request))
+
+    return render(request, 'estoque/lista_colaboradores.html', context)
+
+
+def exportar_colaborador(request, colaborador_id):
+    colaborador = get_object_or_404(Colaborador, id=colaborador_id)
+    protocolos = Protocolo.objects.filter(colaborador=colaborador)
+
+    conteudo = f"Colaborador: {colaborador.nome} ({colaborador.codigo})\n\nItens vinculados:\n"
+    for p in protocolos:
+        conteudo += f"- {p.item} | Patrimônio: {p.patrimonio} | Data: {p.data.strftime('%d/%m/%Y %H:%M')}\n"
+
+    response = HttpResponse(conteudo, content_type="text/plain")
+    response["Content-Disposition"] = f'attachment; filename="colaborador_{colaborador.id}.txt"'
+    return response
+# Função que retorna os dados comuns da sidebar
+def get_sidebar_context(request):
+    user_groups = request.user.groups.all()
+    is_admin = request.user.groups.filter(name='ADMIN').exists() or request.user.is_superuser
+    pertence_geral = request.user.groups.filter(name__iexact='Geral').exists()
+
+    if is_admin:
+        setores = Group.objects.all()
+    else:
+        setores = user_groups
+
+    hub_info = []
+    for s in setores:
+        total_produtos = Produto.objects.filter(setor_responsavel=s).count()
+        hub_info.append({
+            'nome_setor': s.name,
+            'total_produtos': total_produtos
+        })
+
+    return {
+        'is_admin': is_admin,
+        'hub_info': hub_info,
+        'pertence_geral': pertence_geral
+    }
+
+from django.http import JsonResponse
+from .models import Colaborador, Produto
+
+def buscar_colaboradores(request):
+    termo = request.GET.get('q', '')
+    colaboradores = Colaborador.objects.filter(nome__icontains=termo)[:10]
+
+    results = [{"id": c.id, "nome": c.nome, "codigo": c.codigo} for c in colaboradores]
+    return JsonResponse(results, safe=False)
+
+def buscar_produtos(request):
+    termo = request.GET.get('q', '')
+    produtos = Produto.objects.filter(nome__icontains=termo)[:10]
+
+    results = [{"id": p.id, "nome": p.nome, "quantidade": p.quantidade} for p in produtos]
+    return JsonResponse(results, safe=False)

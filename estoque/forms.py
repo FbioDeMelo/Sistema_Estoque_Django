@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User, Group
 from .models import Produto
+from .models import Protocolo, Colaborador, Produto
 
 class UsuarioForm(forms.ModelForm):
     senha = forms.CharField(widget=forms.PasswordInput)
@@ -25,4 +26,26 @@ class ProdutoForm(forms.ModelForm):
                 self.fields['setor_responsavel'].queryset = user.groups.all()
                 self.fields['setor_responsavel'].initial = user.groups.first()
                 self.fields['setor_responsavel'].disabled = True
-        
+class ProtocoloForm(forms.ModelForm):
+    class Meta:
+        model = Protocolo
+        fields = ['colaborador', 'item', 'patrimonio']
+
+    # Se quiser, podemos fazer o campo 'item' ser um select com produtos disponíveis
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['item'].widget = forms.Select(choices=[(p.nome, p.nome) for p in Produto.objects.all()])
+        self.fields['colaborador'].widget.attrs.update({'class': 'form-control'})
+        self.fields['patrimonio'].widget.attrs.update({'class': 'form-control'})
+        self.fields['item'].widget.attrs.update({'class': 'form-control'})    
+from django import forms
+from .models import Colaborador
+
+class ColaboradorForm(forms.ModelForm):
+    class Meta:
+        model = Colaborador
+        fields = ['codigo', 'nome']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+        }   

@@ -125,5 +125,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-LOGIN_REDIRECT_URL = '/estoque/'  # onde o usuário vai após login
-LOGIN_URL = '/'  # rota do login
+
+# Configurações de autenticação
+LOGIN_URL = 'login'               # rota nomeada do login (urls.py)
+LOGIN_REDIRECT_URL = 'index'      # para onde o usuário vai após login
+LOGOUT_REDIRECT_URL = 'login'     # para onde vai após logout
+
+# Para arquivos estáticos (CSS, JS, imagens fixas)
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]

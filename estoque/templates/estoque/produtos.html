@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <title>Produtos - {{ setor }}</title>
 <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -85,6 +86,9 @@
         .menu-toggle { display:block; }
     }
     @media(min-width:769px){ .menu-toggle { display:none; } }
+                            .sidebar a i {
+  margin-right: 8px; /* ajusta o espaço entre ícone e texto */
+}
 </style>
 </head>
 <body>
@@ -100,22 +104,34 @@
 </div>
 
 <!-- Sidebar -->
+
+    <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
-    <a href="{% url 'index' %}">Inicio</a>
-    {% if is_admin %}
-        <a href="{% url 'produtos_setor' 'todos' %}">Estoque Total</a>
-    {% else %}
-        {% for setor in hub_info %}
-            <a href="{% url 'produtos_setor' setor.nome_setor %}">Estoque <strong>{{ setor.nome_setor }}</strong></a>
-        {% endfor %}
-    {% endif %}
-    <a href="{% url 'adicionar_produto' %}">Adicionar Produto</a>
-    {% if is_admin %}
-        <a href="{% url 'adicionar_usuario' %}">Adicionar Usuário</a>
-        <a href="{% url 'gerenciar_usuarios' %}">Gerenciar Usuários</a>
-        <a href="{% url 'movimentacoes' %}">Ver Movimentações</a>
-        <a href="{% url 'dashboard_graficos' %}">Dashboard de Gráficos</a>
-    {% endif %}
+<a href="{% url 'index' %}"><i class="fas fa-home"></i> Início</a>
+  {% if is_admin %}
+    <a href="{% url 'produtos_setor' 'todos' %}"><i class="fas fa-boxes"></i> Estoque Total</a>
+  {% else %}
+    {% for setor in hub_info %}
+      <a href="{% url 'produtos_setor' setor.nome_setor %}">
+        <i class="fas fa-box"></i> Estoque -  <strong>{{ setor.nome_setor }}</strong>
+      </a>
+    {% endfor %}
+  {% endif %}
+  <a href="{% url 'adicionar_produto' %}"><i class="fas fa-plus-circle"></i> Adicionar Produto</a>
+  {% if is_admin %}
+    <a href="{% url 'adicionar_usuario' %}"><i class="fas fa-user-plus"></i> Adicionar Usuário</a>
+    <a href="{% url 'gerenciar_usuarios' %}"><i class="fas fa-users-cog"></i> Gerenciar Usuários</a>
+  {% endif %}
+  {% if is_admin %}
+    <a href="{% url 'movimentacoes' %}"><i class="fas fa-exchange-alt"></i> Ver Movimentações</a>
+    <a href="{% url 'dashboard_graficos' %}"><i class="fas fa-chart-line"></i> Dashboard de Gráficos</a>
+  {% endif %}
+  {% if is_admin or pertence_geral %}
+    <a href="{% url 'colaborador_create' %}"><i class="fas fa-user-plus"></i> Cadastrar Colaborador</a>
+    <a href="{% url 'lista_colaboradores' %}"><i class="fas fa-users"></i> Ver Colaboradores</a>
+    <a href="{% url 'protocolo_create' %}"><i class="fas fa-envelope"></i> Protocolo de Correspondência</a>
+  {% endif %}
+  <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
 </div>
 
 <!-- Conteúdo principal -->
@@ -163,6 +179,19 @@
 </tbody>
 
         </table>
+        <div style="margin-top:20px; display:flex; gap:8px; justify-content:center;">
+    {% if produtos.has_previous %}
+        <a href="?page={{ produtos.previous_page_number }}" class="action-btn">Anterior</a>
+    {% endif %}
+
+    <span style="padding:8px 12px; background:#f0f0f0; border-radius:5px;">
+        Página {{ produtos.number }} de {{ produtos.paginator.num_pages }}
+    </span>
+
+    {% if produtos.has_next %}
+        <a href="?page={{ produtos.next_page_number }}" class="action-btn">Próxima</a>
+    {% endif %}
+</div>
     </div>
 </div>
 

@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <title>Gráficos de Estoque</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <title>Lista de Colaboradores</title>
     <style>
         /* ESTILOS CONSISTENTES COM O DESIGN ANTERIOR */
         
@@ -22,6 +19,7 @@
             line-height: 1.6;
             background-color: #f8f9fa;
             color: #333;
+            overflow-x: hidden; /* Previne scroll horizontal */
         }
 
         /* NAVBAR COM LOGO */
@@ -38,6 +36,7 @@
             justify-content: space-between;
             align-items: center;
             z-index: 1000;
+            height: 66px; /* Altura fixa para cálculo preciso */
         }
 
         .navbar-brand {
@@ -88,10 +87,10 @@
         /* SIDEBAR IDÊNTICO */
         .sidebar {
             position: fixed;
-            top: 66px;
+            top: 66px; /* Começa abaixo da navbar */
             left: 0;
             width: 260px;
-            height: calc(100vh - 66px);
+            height: calc(100vh - 66px); /* Altura total menos navbar */
             background: #ffffff;
             padding: 25px 0;
             box-shadow: 2px 0 15px rgba(0,0,0,0.05);
@@ -118,20 +117,17 @@
             transform: translateX(5px);
         }
 
-        .sidebar a strong {
-            font-weight: 600;
-        }
-
-        /* CONTEÚDO PRINCIPAL */
+        /* CONTEÚDO PRINCIPAL CORRIGIDO */
         .content {
-            margin-top: 66px;
-            margin-left: 260px;
+            margin-top: 66px;   /* espaço da navbar */
+            margin-left: 260px; /* espaço da sidebar */
             padding: 30px;
             min-height: calc(100vh - 66px);
             transition: margin-left 0.3s ease;
+            width: calc(100% - 260px); /* Largura total menos sidebar */
         }
 
-        /* HEADER DA PÁGINA */
+        /* HEADER DA PÁGINA - AGORA DENTRO DO CONTENT */
         .page-header {
             background: white;
             padding: 25px 30px;
@@ -139,72 +135,220 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
             margin-bottom: 30px;
             border-left: 4px solid #ea005f;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .page-header h1 {
             color: #2c3e50;
             font-size: 1.8rem;
-            margin-bottom: 10px;
+            margin-bottom: 0;
             font-weight: 600;
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 10px;
         }
 
-        .page-header p {
-            color: #666;
-            font-size: 1rem;
+        .page-header h1::before {
+            font-size: 1.2em;
         }
 
-        /* GRID DE GRÁFICOS */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 25px;
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            min-width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #ea005f;
+            box-shadow: 0 0 0 2px rgba(234, 0, 95, 0.1);
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ea005f;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            background: #c4004b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(234, 0, 95, 0.3);
+        }
+
+        /* LISTA DE COLABORADORES */
+        .colaboradores-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
             margin-bottom: 30px;
         }
 
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border-left: 4px solid #ea005f;
+        .colaboradores-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
 
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-        }
-
-        .card h3 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-            font-weight: 600;
+        .colaborador-item {
+            padding: 20px 25px;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.3s ease;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
+        .colaborador-item:hover {
+            background-color: #f8fafc;
         }
 
-        canvas {
-            width: 100% !important;
-            height: 100% !important;
+        .colaborador-item:last-child {
+            border-bottom: none;
+        }
+
+        .colaborador-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .colaborador-nome {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .colaborador-codigo {
+            font-size: 0.9rem;
+            color: #666;
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .colaborador-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #27ae60;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .export-btn:hover {
+            background: #219653;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+        }
+
+        /* PAGINAÇÃO */
+        .pagination {
+            margin: 20px 0;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .pagination a {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 16px;
+            margin: 0 5px;
+            background: #f8f9fa;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .pagination a:hover {
+            background: #ea005f;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .pagination span {
+            padding: 8px 16px;
+            margin: 0 10px;
+            background: #ea005f;
+            color: white;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+
+        /* MENSAGEM DE LISTA VAZIA */
+        .empty-state {
+            text-align: center;
+            padding: 60px 30px;
+            color: #666;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state .action-btn {
+            display: inline-flex;
         }
 
         /* LINKS DE AÇÃO */
         .action-links {
             text-align: center;
-            margin-top: 30px;
             padding: 20px;
             background: white;
             border-radius: 10px;
@@ -232,10 +376,11 @@
             text-decoration: none;
         }
 
-        /* RESPONSIVIDADE */
+        /* RESPONSIVIDADE MELHORADA */
         @media (max-width: 768px) {
             .navbar {
                 padding: 10px 15px;
+                height: 62px;
             }
             
             .navbar-brand h1 {
@@ -261,27 +406,45 @@
                 margin-left: 0;
                 padding: 20px 15px;
                 margin-top: 62px;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .card {
-                padding: 20px;
-            }
-
-            .chart-container {
-                height: 250px;
+                width: 100%;
             }
 
             .page-header {
                 padding: 20px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
             }
 
             .page-header h1 {
                 font-size: 1.5rem;
+                text-align: center;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-form {
+                width: 100%;
+            }
+
+            .search-input {
+                min-width: auto;
+                flex: 1;
+            }
+
+            .colaborador-item {
+                padding: 15px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .colaborador-actions {
+                width: 100%;
+                justify-content: flex-start;
             }
 
             .menu-toggle {
@@ -303,6 +466,15 @@
                 margin: 10px 0;
                 text-align: center;
             }
+
+            .pagination {
+                padding: 15px;
+            }
+
+            .pagination a, .pagination span {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
         }
 
         @media (min-width: 769px) {
@@ -312,24 +484,25 @@
         }
 
         @media (max-width: 480px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .card {
-                padding: 15px;
-            }
-            
-            .chart-container {
-                height: 200px;
-            }
-            
             .page-header h1 {
                 font-size: 1.3rem;
             }
-
+            
             .navbar-logo {
                 height: 35px;
+            }
+            
+            .colaborador-item {
+                padding: 12px 15px;
+            }
+            
+            .export-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+
+            .search-input {
+                min-width: 200px;
             }
         }
 
@@ -346,18 +519,13 @@
         .sidebar::-webkit-scrollbar-thumb:hover {
             background: #ccc;
         }
-
-        /* Ícones nos títulos */
-        .card h3::before {
-            font-size: 1.1em;
-        }
-    .sidebar a i {
+                        .sidebar a i {
   margin-right: 8px; /* ajusta o espaço entre ícone e texto */
 }
     </style>
 </head>
 <body>
-    <!-- NAVBAR COM LOGO -->
+    <!-- NAVBAR -->
     <div class="navbar">
         <div class="navbar-brand">
             <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" alt="Faculdade Libano" class="navbar-logo">
@@ -375,7 +543,8 @@
             <a href="{% url 'logout' %}">Sair</a>
         </div>
     </div>
-    <!-- SIDEBAR IDÊNTICO AO PRIMEIRO CÓDIGO -->
+
+    <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
 <a href="{% url 'index' %}"><i class="fas fa-home"></i> Início</a>
   {% if is_admin %}
@@ -403,158 +572,65 @@
   {% endif %}
   <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
 </div>
-
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÚDO PRINCIPAL - CORRIGIDO -->
     <div class="content">
-            <h1>📊 Dashboard de Estoque</h1>
-            <p>Visualizações gráficas do estoque e movimentações</p>
-        <div class="grid">
-            <div class="card">
-                <h3>Produtos por Setor</h3>
-                <div class="chart-container">
-                    <canvas id="estoqueChart"></canvas>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Distribuição Percentual</h3>
-                <div class="chart-container">
-                    <canvas id="pieChart"></canvas>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Entradas x Saídas</h3>
-                <div class="chart-container">
-                    <canvas id="barStacked"></canvas>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Movimentações por Mês</h3>
-                <div class="chart-container">
-                    <canvas id="lineChart"></canvas>
-                </div>
+        <!-- PAGE-HEADER AGORA DENTRO DO CONTENT -->
+        <div class="page-header">
+            <h1>Colaboradores</h1>
+            <div class="header-actions">
+                <form method="get" action="{% url 'lista_colaboradores' %}" class="search-form">
+                    <input type="text" name="q" placeholder="Pesquisar por nome ou código" 
+                           value="{{ request.GET.q }}" class="search-input">
+                    <button type="submit" class="action-btn">🔍 Buscar</button>
+                </form>
+                <a href="{% url 'colaborador_create' %}" class="action-btn">
+                    ➕ Cadastrar Novo
+                </a>
             </div>
         </div>
 
+        <div class="colaboradores-container">
+            {% if colaboradores %}
+                <ul class="colaboradores-list">
+                    {% for colaborador in colaboradores %}
+                        <li class="colaborador-item">
+                            <div class="colaborador-info">
+                                <div class="colaborador-nome">{{ colaborador.nome }}</div>
+                                <div class="colaborador-codigo">Código: {{ colaborador.codigo }}</div>
+                            </div>
+                            <div class="colaborador-actions">
+                                <a href="{% url 'exportar_colaborador' colaborador.id %}" class="export-btn">
+                                    📥 Exportar Registro
+                                </a>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+                
+                <!-- PAGINAÇÃO -->
+                <div class="pagination">
+                    {% if colaboradores.has_previous %}
+                        <a href="?q={{ request.GET.q }}&page={{ colaboradores.previous_page_number }}">⬅ Anterior</a>
+                    {% endif %}
+
+                    <span>Página {{ colaboradores.number }} de {{ colaboradores.paginator.num_pages }}</span>
+
+                    {% if colaboradores.has_next %}
+                        <a href="?q={{ request.GET.q }}&page={{ colaboradores.next_page_number }}">Próxima ➡</a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon"></div>
+                    <p>Nenhum colaborador cadastrado no momento.</p>
+                    <a href="{% url 'colaborador_create' %}" class="action-btn">
+                        ➕ Cadastrar Primeiro Colaborador
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
     <script>
-        // MESMO JAVASCRIPT ORIGINAL - SEM ALTERAÇÕES
-        const labels = JSON.parse('{{ labels_json|default:"[]"|escapejs }}');
-        const data = JSON.parse('{{ data_json|default:"[]"|escapejs }}');
-        const entradas = JSON.parse('{{ entradas_json|default:"[]"|escapejs }}');
-        const saidas = JSON.parse('{{ saidas_json|default:"[]"|escapejs }}');
-        const meses = JSON.parse('{{ movimentacoes_meses|default:"[]"|escapejs }}');
-        const movimentacoes = JSON.parse('{{movimentacoes_valores|default:"[]"|escapejs }}');
-
-        // ===== Gráfico 1: Barras (produtos por setor) =====
-        const ctxBar = document.getElementById('estoqueChart').getContext('2d');
-        new Chart(ctxBar, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Total de Produtos por Setor',
-                    data: data,
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: true }, tooltip: { enabled: true } },
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Quantidade' } },
-                    x: { title: { display: true, text: 'Setores' } }
-                }
-            }
-        });
-
-        // ===== Gráfico 2: Pizza (percentual por setor) =====
-        const ctxPie = document.getElementById('pieChart').getContext('2d');
-        new Chart(ctxPie, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: ['#36a2eb','#ff6384','#ffcd56','#4bc0c0','#9966ff']
-                }]
-            },
-            options: { responsive: true }
-        });
-
-        // ===== Gráfico 3: Barras empilhadas (entradas x saídas) =====
-        const ctxStacked = document.getElementById('barStacked').getContext('2d');
-        new Chart(ctxStacked, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Entradas', data: entradas, backgroundColor: 'rgba(75, 192, 192, 0.7)' },
-                    { label: 'Saídas', data: saidas, backgroundColor: 'rgba(255, 99, 132, 0.7)' }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: true } },
-                scales: { 
-                    x: { stacked: true },
-                    y: { stacked: true, beginAtZero: true }
-                }
-            }
-        });
-
-        function chartOptionsLine(validData) {
-            return {
-                responsive: true,
-                maintainAspectRatio: true,
-                scales: {
-                    y: { beginAtZero: true, suggestedMax: Math.max(...validData.map(i=>i.value))*1.1, grid:{color:'rgba(0,0,0,0.05)'} },
-                    x: { grid: { display: false } }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { backgroundColor:'#333', titleFont:{size:14,weight:'bold'}, bodyFont:{size:12}, padding:12, cornerRadius:6 }
-                }
-            };
-        }
-
-        // ===== Gráfico 4: Linha (movimentações ao longo do tempo) =====
-        function criarLinhaChart(canvasId, label, labels, valores) {
-            if (!Array.isArray(labels)) labels = [];
-            if (!Array.isArray(valores)) valores = [];
-
-            const validData = labels.map((l, i) => ({ label: l, value: valores[i] || 0 }))
-                                    .filter(item => item.value > 0);
-
-            const ctxLine = document.getElementById(canvasId).getContext('2d');
-            return new Chart(ctxLine, {
-                type: 'line',
-                data: {
-                    labels: validData.map(i => i.label),
-                    datasets: [{
-                        label: label,
-                        data: validData.map(i => i.value),
-                        fill: false,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        tension: 0.3,
-                        fill: true,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#1e88e5',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        spanGaps: true
-                    }]
-                },
-                options: chartOptionsLine(validData)
-            });
-        }
-
-        criarLinhaChart('lineChart','Movimentações Mensais',meses,movimentacoes);
-
         // FUNÇÕES DE RESPONSIVIDADE DO SISTEMA
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -572,6 +648,7 @@
             }
         });
 
+        // Otimização de performance: debounce para resize
         let resizeTimeout;
         window.addEventListener('resize', function() {
             clearTimeout(resizeTimeout);
@@ -581,6 +658,14 @@
                     sidebar.classList.remove('mobile-open');
                 }
             }, 250);
+        });
+
+        // Focar no campo de busca se existir
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput) {
+                searchInput.focus();
+            }
         });
     </script>
 </body>

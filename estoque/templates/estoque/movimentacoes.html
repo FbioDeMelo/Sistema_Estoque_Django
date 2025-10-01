@@ -1,34 +1,610 @@
-<h1>Movimentações de Estoque</h1>
-<form method="get" action="">
-  Usuário: <input type="text" name="usuario" value="{{ request.GET.usuario }}">
-  Produto: <input type="text" name="produto" value="{{ request.GET.produto }}">
-  Tipo:
-  <select name="tipo">
-    <option value="">Todos</option>
-    <option value="entrada" {% if request.GET.tipo == 'entrada' %}selected{% endif %}>Entrada</option>
-    <option value="saida" {% if request.GET.tipo == 'saida' %}selected{% endif %}>Saída</option>
-  </select>
-  Data Início: <input type="date" name="data_inicio" value="{{ request.GET.data_inicio }}">
-  Data Fim: <input type="date" name="data_fim" value="{{ request.GET.data_fim }}">
-  <button type="submit">Filtrar</button>
-  
-</form>
-<table border="1" cellpadding="5">
-  <tr>
-    <th>Data</th><th>Usuário</th><th>Produto</th><th>Tipo</th><th>Quantidade</th><th>Observação</th>
-  </tr>
-  {% for mov in movimentacoes %}
-  <tr>
-    <td>{{ mov.data|date:"d/m/Y H:i" }}</td>
-    <td>{{ mov.usuario.username }}</td>
-    <td>{{ mov.produto.nome }}</td>
-    <td>{{ mov.get_tipo_display }}</td>
-    <td>{{ mov.quantidade }}</td>
-    <td>{{ mov.observacao }}</td>
-  </tr>
-  {% empty %}
-  <tr><td colspan="6">Nenhuma movimentação</td></tr>
-  {% endfor %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Movimentações de Estoque</title>
+    <style>
+        /* ESTILOS CONSISTENTES COM O DESIGN ANTERIOR */
+        
+        /* Reset e configurações base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-</table>
-<a href="{% url 'exportar_movimentacoes' %}?{{ request.GET.urlencode }}">Exportar CSV</a>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        /* NAVBAR IDÊNTICA */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+      color: rgb(0, 0, 0);
+      padding: 12px 20px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+
+    .navbar h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .navbar-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .navbar-links span {
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+
+    .navbar-links a {
+      color: rgb(0, 0, 0);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      background: rgba(255, 0, 0, 0.1);
+    }
+
+    .navbar-links a:hover {
+      background: rgba(251, 0, 0, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Sidebar moderno com animações suaves */
+    .sidebar {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      width: 260px;
+      height: calc(100vh - 60px);
+      background: #ffffff;
+      padding: 25px 0;
+      box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+      overflow-y: auto;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999;
+    }
+
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      color: #555;
+      padding: 12px 25px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border-left: 3px solid transparent;
+      margin: 5px 0;
+    }
+
+    .sidebar a:hover {
+      background: #f8f9fa;
+      color: #2c3e50;
+      border-left-color: #ea005f;
+      transform: translateX(5px);
+    }
+
+    .sidebar a strong {
+      font-weight: 600;
+    }
+
+        /* CONTEÚDO PRINCIPAL */
+        .content {
+            margin-top: 60px;
+            margin-left: 260px;
+            padding: 30px;
+            min-height: calc(100vh - 60px);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* HEADER DA PÁGINA */
+        .page-header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            border-left: 4px solid #ea005f;
+        }
+
+        .page-header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1::before {
+            content: "📋";
+            font-size: 1.2em;
+        }
+
+        /* FORMULÁRIO DE FILTRO */
+        .filter-form {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .submit-btn {
+            background: #ea005f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            height: 40px;
+        }
+
+        .submit-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        /* TABELA DE MOVIMENTAÇÕES */
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .movimentacoes-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .movimentacoes-table th {
+            background-color: #000000;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #ffffff;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .movimentacoes-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.2s ease;
+        }
+
+        .movimentacoes-table tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .movimentacoes-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* BADGES PARA TIPOS DE MOVIMENTAÇÃO */
+        .tipo-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .tipo-entrada {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .tipo-saida {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* LINKS DE AÇÃO */
+        .action-links {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .action-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #3498db;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            background: #f8f9fa;
+        }
+
+        .action-link:hover {
+            color: #2980b9;
+            background: #e9ecef;
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+
+        /* MENSAGEM DE LISTA VAZIA */
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 10px 15px;
+            }
+            
+            .navbar h1 {
+                font-size: 1.2rem;
+            }
+            
+            .navbar-links span {
+                display: none;
+            }
+
+            .sidebar {
+                width: 280px;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 20px 15px;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .filter-form {
+                padding: 20px;
+            }
+
+            .page-header {
+                padding: 20px;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .movimentacoes-table {
+                font-size: 0.85rem;
+            }
+
+            .movimentacoes-table th,
+            .movimentacoes-table td {
+                padding: 10px 8px;
+            }
+
+            .menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: #000000;
+                font-size: 1.5rem;
+                cursor: pointer;
+                padding: 5px;
+            }
+
+            .action-links {
+                padding: 15px;
+            }
+
+            .action-link {
+                display: block;
+                margin: 10px 0;
+                text-align: center;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .movimentacoes-table {
+                min-width: 600px;
+            }
+            
+            .page-header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .filter-form {
+                padding: 15px;
+            }
+        }
+
+        /* Scrollbar customizada para sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #ccc;
+        }
+        .pagination {
+    text-align: center;
+    margin: 20px 0;
+}
+            .navbar-logo {
+    height: 42px;
+    width: auto;
+}
+.pagination a {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 5px;
+    background: #ea005f;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.pagination a:hover {
+    background: #bc004b;
+}
+
+.pagination span {
+    margin: 0 10px;
+    font-weight: 500;
+}
+                        .sidebar a i {
+  margin-right: 8px; /* ajusta o espaço entre ícone e texto */
+}
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" alt="Faculdade Libano" class="navbar-logo">
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="navbar-links">
+        <span>{{ request.user.username }} {% if not is_admin %} – {{ request.user.groups.first.name }} {% else %} – Admin {% endif %}</span>
+        <a href="{% url 'logout' %}">Sair</a>
+    </div>
+</div>
+<div class="sidebar" id="sidebar">
+<a href="{% url 'index' %}"><i class="fas fa-home"></i> Início</a>
+  {% if is_admin %}
+    <a href="{% url 'produtos_setor' 'todos' %}"><i class="fas fa-boxes"></i> Estoque Total</a>
+  {% else %}
+    {% for setor in hub_info %}
+      <a href="{% url 'produtos_setor' setor.nome_setor %}">
+        <i class="fas fa-box"></i> Estoque -  <strong>{{ setor.nome_setor }}</strong>
+      </a>
+    {% endfor %}
+  {% endif %}
+  <a href="{% url 'adicionar_produto' %}"><i class="fas fa-plus-circle"></i> Adicionar Produto</a>
+  {% if is_admin %}
+    <a href="{% url 'adicionar_usuario' %}"><i class="fas fa-user-plus"></i> Adicionar Usuário</a>
+    <a href="{% url 'gerenciar_usuarios' %}"><i class="fas fa-users-cog"></i> Gerenciar Usuários</a>
+  {% endif %}
+  {% if is_admin %}
+    <a href="{% url 'movimentacoes' %}"><i class="fas fa-exchange-alt"></i> Ver Movimentações</a>
+    <a href="{% url 'dashboard_graficos' %}"><i class="fas fa-chart-line"></i> Dashboard de Gráficos</a>
+  {% endif %}
+  {% if is_admin or pertence_geral %}
+    <a href="{% url 'colaborador_create' %}"><i class="fas fa-user-plus"></i> Cadastrar Colaborador</a>
+    <a href="{% url 'lista_colaboradores' %}"><i class="fas fa-users"></i> Ver Colaboradores</a>
+    <a href="{% url 'protocolo_create' %}"><i class="fas fa-envelope"></i> Protocolo de Correspondência</a>
+  {% endif %}
+  <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
+</div>
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="content">
+        <div class="page-header">
+            <h1>Movimentações de Estoque</h1>
+        <!-- FORMULÁRIO DE FILTRO -->
+        <form method="get" action="" class="filter-form">
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label for="usuario">Usuário:</label>
+                    <input type="text" id="usuario" name="usuario" value="{{ request.GET.usuario }}" class="form-control" placeholder="Filtrar por usuário">
+                </div>
+                <div class="form-group">
+                    <label for="produto">Produto:</label>
+                    <input type="text" id="produto" name="produto" value="{{ request.GET.produto }}" class="form-control" placeholder="Filtrar por produto">
+                </div>
+                <div class="form-group">
+                    <label for="tipo">Tipo:</label>
+                    <select id="tipo" name="tipo" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="entrada" {% if request.GET.tipo == 'entrada' %}selected{% endif %}>Entrada</option>
+                        <option value="saida" {% if request.GET.tipo == 'saida' %}selected{% endif %}>Saída</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="data_inicio">Data Início:</label>
+                    <input type="date" id="data_inicio" name="data_inicio" value="{{ request.GET.data_inicio }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="data_fim">Data Fim:</label>
+                    <input type="date" id="data_fim" name="data_fim" value="{{ request.GET.data_fim }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="submit-btn">Filtrar</button>
+                    
+                </div>
+            </div>
+        </form>
+
+        <!-- TABELA DE MOVIMENTAÇÕES -->
+        <div class="table-container">
+            <table class="movimentacoes-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Usuário</th>
+                        <th>Produto</th>
+                        <th>Tipo</th>
+                        <th>Quantidade</th>
+                        <th>Observação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimentacoes %}
+                    <tr>
+                        <td>{{ mov.data|date:"d/m/Y H:i" }}</td>
+                        <td>{{ mov.usuario.username }}</td>
+                        <td>{{ mov.produto.nome }}</td>
+                        <td>
+                            <span class="tipo-badge {% if mov.tipo == 'entrada' %}tipo-entrada{% else %}tipo-saida{% endif %}">
+                                {{ mov.get_tipo_display }}
+                            </span>
+                        </td>
+                        <td>{{ mov.quantidade }}</td>
+                        <td>{{ mov.observacao }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-message">Nenhuma movimentação encontrada</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+<div class="pagination">
+    {% if movimentacoes.has_previous %}
+        <a href="?page={{ movimentacoes.previous_page_number }}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.produto %}&produto={{ request.GET.produto }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}">&laquo; Anterior</a>
+    {% endif %}
+
+    <span>Página {{ movimentacoes.number }} de {{ movimentacoes.paginator.num_pages }}</span>
+
+    {% if movimentacoes.has_next %}
+        <a href="?page={{ movimentacoes.next_page_number }}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}{% if request.GET.produto %}&produto={{ request.GET.produto }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}">Próxima &raquo;</a>
+    {% endif %}
+</div>
+        <!-- LINKS DE AÇÃO -->
+        <div class="action-links">
+            <a href="{% url 'exportar_movimentacoes' %}?{{ request.GET.urlencode }}" class="action-link">📥 Exportar CSV</a>
+        </div>
+    </div>
+
+    <script>
+        // FUNÇÕES DE RESPONSIVIDADE DO SISTEMA
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !menuToggle.contains(event.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                const sidebar = document.getElementById('sidebar');
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            }, 250);
+        });
+
+        // Focar no primeiro campo do formulário ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstField = document.querySelector('.form-control');
+            if (firstField) {
+                firstField.focus();
+            }
+        });
+    </script>
+</body>
+</html>

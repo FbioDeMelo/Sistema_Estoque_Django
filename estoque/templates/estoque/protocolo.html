@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Registrar Item - Protocolo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        /* NAVBAR IDÊNTICA */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+            color: #000000;
+            padding: 12px 20px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .navbar-logo {
+            height: 42px;
+            width: auto;
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: #000000;
+        }
+
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .navbar-links span {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            color: #000000;
+        }
+
+        .navbar-links a {
+            color: #000000;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            background: rgba(234, 0, 95, 0.1);
+        }
+
+        .navbar-links a:hover {
+            background: rgba(234, 0, 95, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* SIDEBAR IDÊNTICO */
+        .sidebar {
+            position: fixed;
+            top: 66px;
+            left: 0;
+            width: 260px;
+            height: calc(100vh - 66px);
+            background: #ffffff;
+            padding: 25px 0;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+            overflow-y: auto;
+            z-index: 999;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            color: #555;
+            padding: 12px 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            margin: 5px 0;
+        }
+
+        .sidebar a:hover {
+            background: #f8f9fa;
+            color: #2c3e50;
+            border-left-color: #ea005f;
+            transform: translateX(5px);
+        }
+
+        /* CONTEÚDO PRINCIPAL */
+        .content {
+            margin-top: 66px;
+            margin-left: 260px;
+            padding: 30px;
+            min-height: calc(100vh - 66px);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* HEADER DA PÁGINA */
+        .page-header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            border-left: 4px solid #ea005f;
+        }
+
+        .page-header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1::before {
+            content: "📋";
+            font-size: 1.2em;
+        }
+
+        .page-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        /* FORMULÁRIO */
+        .form-container {
+            background: white;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .form-group p {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            border-color: #ea005f;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(234, 0, 95, 0.1);
+        }
+
+        select.form-control {
+            background: white;
+            cursor: pointer;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        /* BOTÕES */
+        .submit-btn {
+            background: #ea005f;
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #c4004b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(234, 0, 95, 0.3);
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-content p {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            color: #2c3e50;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .modal-btn.confirm {
+            background: #ea005f;
+            color: white;
+        }
+
+        .modal-btn.confirm:hover {
+            background: #c4004b;
+            transform: translateY(-2px);
+        }
+
+        .modal-btn.cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #545b62;
+            transform: translateY(-2px);
+        }
+
+        /* LOADING */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading p {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ea005f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 10px 15px;
+            }
+            
+            .navbar-brand h1 {
+                font-size: 1.2rem;
+            }
+            
+            .navbar-links span {
+                display: none;
+            }
+
+            .sidebar {
+                width: 280px;
+                transform: translateX(-100%);
+                top: 62px;
+                height: calc(100vh - 62px);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 20px 15px;
+                margin-top: 62px;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .page-header {
+                padding: 20px;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: #000000;
+                font-size: 1.5rem;
+                cursor: pointer;
+                padding: 5px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+
+            .modal-btn {
+                width: 100%;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 15px;
+            }
+            
+            .page-header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .navbar-logo {
+                height: 35px;
+            }
+        }
+
+        /* Scrollbar customizada para sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #ccc;
+        }
+
+        /* Estilo para campos obrigatórios */
+        .field-required label::after {
+            content: " *";
+            color: #e74c3c;
+        }
+                                    .sidebar a i {
+  margin-right: 8px; /* ajusta o espaço entre ícone e texto */
+}
+.autocomplete-list {
+    position: absolute;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-height: 250px;
+    overflow-y: auto;
+    width: 100%;
+    z-index: 1000;
+}
+
+.autocomplete-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f1f1;
+    transition: background 0.2s ease;
+}
+
+.autocomplete-item:hover {
+    background: #f8f9fa;
+}
+
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="navbar-brand">
+            <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" alt="Faculdade Libano" class="navbar-logo">
+        </div>
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="navbar-links">
+            <span>
+                {{ request.user.username }}
+                {% if not is_admin %}
+                    – {{ request.user.groups.first.name }}
+                {% else %}
+                    – Admin
+                {% endif %}
+            </span>
+            <a href="{% url 'logout' %}">Sair</a>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+<a href="{% url 'index' %}"><i class="fas fa-home"></i> Início</a>
+  {% if is_admin %}
+    <a href="{% url 'produtos_setor' 'todos' %}"><i class="fas fa-boxes"></i> Estoque Total</a>
+  {% else %}
+    {% for setor in hub_info %}
+      <a href="{% url 'produtos_setor' setor.nome_setor %}">
+        <i class="fas fa-box"></i> Estoque -  <strong>{{ setor.nome_setor }}</strong>
+      </a>
+    {% endfor %}
+  {% endif %}
+  <a href="{% url 'adicionar_produto' %}"><i class="fas fa-plus-circle"></i> Adicionar Produto</a>
+  {% if is_admin %}
+    <a href="{% url 'adicionar_usuario' %}"><i class="fas fa-user-plus"></i> Adicionar Usuário</a>
+    <a href="{% url 'gerenciar_usuarios' %}"><i class="fas fa-users-cog"></i> Gerenciar Usuários</a>
+  {% endif %}
+  {% if is_admin %}
+    <a href="{% url 'movimentacoes' %}"><i class="fas fa-exchange-alt"></i> Ver Movimentações</a>
+    <a href="{% url 'dashboard_graficos' %}"><i class="fas fa-chart-line"></i> Dashboard de Gráficos</a>
+  {% endif %}
+  {% if is_admin or pertence_geral %}
+    <a href="{% url 'colaborador_create' %}"><i class="fas fa-user-plus"></i> Cadastrar Colaborador</a>
+    <a href="{% url 'lista_colaboradores' %}"><i class="fas fa-users"></i> Ver Colaboradores</a>
+    <a href="{% url 'protocolo_create' %}"><i class="fas fa-envelope"></i> Protocolo de Correspondência</a>
+  {% endif %}
+  <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
+</div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="content">
+            <h1>Registrar Item de Protocolo</h1>
+            <p>Adicione um novo item ao protocolo do colaborador</p>
+
+        <div class="form-container">
+<form method="POST" id="protocoloForm">
+    {% csrf_token %}
+
+    <!-- Campo Colaborador -->
+    <div class="form-group">
+        <label for="colaborador">Colaborador</label>
+        <input type="text" id="colaborador" name="colaborador" class="form-control" autocomplete="off">
+        <div id="colaboradoresList" class="autocomplete-list"></div>
+    </div>
+
+    <!-- Campo Produto -->
+    <div class="form-group">
+        <label for="produto">Produto</label>
+        <input type="text" id="produto" name="produto" class="form-control" autocomplete="off">
+        <div id="produtosList" class="autocomplete-list"></div>
+    </div>
+
+    <!-- Campo Patrimônio -->
+    <div class="form-group">
+        <label for="patrimonio">Número de Patrimônio</label>
+        <input type="text" id="patrimonio" name="patrimonio" class="form-control" placeholder="Ex: 12345">
+    </div>
+
+    <button type="button" class="submit-btn" onclick="confirmSubmit()">Registrar</button>
+</form>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <p>Confirma adicionar o item ao colaborador?</p>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" onclick="submitForm()">Sim</button>
+                <button class="modal-btn cancel" onclick="closeModal()">Não</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <p>Registrando item...</p>
+    </div>
+
+    <script>
+        // FUNÇÕES DE RESPONSIVIDADE DO SISTEMA
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !menuToggle.contains(event.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                const sidebar = document.getElementById('sidebar');
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            }, 250);
+        });
+
+        // Aplicar classes de estilo aos campos do formulário
+        document.addEventListener('DOMContentLoaded', function() {
+            const formFields = document.querySelectorAll('input, select, textarea');
+            formFields.forEach(field => {
+                field.classList.add('form-control');
+            });
+
+            // Focar no primeiro campo do formulário
+            const firstField = document.querySelector('input:not([type="hidden"]), select, textarea');
+            if (firstField) {
+                firstField.focus();
+            }
+        });
+
+        // FUNÇÕES DO FORMULÁRIO (MANTIDAS DO CÓDIGO ORIGINAL)
+        function confirmSubmit() {
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+
+        function submitForm() {
+            closeModal();
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('protocoloForm').submit();
+        }
+document.addEventListener('DOMContentLoaded', function () {
+    function setupAutocomplete(inputId, listId, url, labelFn) {
+        const input = document.getElementById(inputId);
+        const list = document.getElementById(listId);
+
+        input.addEventListener('input', function () {
+            const query = this.value;
+            if (query.length < 2) {
+                list.innerHTML = "";
+                return;
+            }
+
+            fetch(`${url}?q=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    list.innerHTML = "";
+                    data.forEach(item => {
+                        const div = document.createElement("div");
+                        div.classList.add("autocomplete-item");
+                        div.innerHTML = labelFn(item);
+                        div.addEventListener("click", function () {
+                            input.value = item.nome;
+                            list.innerHTML = "";
+                        });
+                        list.appendChild(div);
+                    });
+                });
+        });
+
+        // fecha ao clicar fora
+        document.addEventListener("click", function (e) {
+            if (!list.contains(e.target) && e.target !== input) {
+                list.innerHTML = "";
+            }
+        });
+    }
+
+    // Colaboradores
+    setupAutocomplete("colaborador", "colaboradoresList", "/buscar_colaboradores/",
+        item => `<strong>${item.nome}</strong><br><small>Código: ${item.codigo}</small>`
+    );
+
+    // Produtos
+    setupAutocomplete("produto", "produtosList", "/buscar_produtos/",
+        item => `<strong>${item.nome}</strong><br><small>Qtd disponível: ${item.quantidade}</small>`
+    );
+});
+
+    </script>
+</body>
+</html>
