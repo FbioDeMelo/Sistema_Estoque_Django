@@ -107,13 +107,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'   # idioma padrão do sistema
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'  # fuso horário do Brasil
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = True  # mantém armazenamento em UTC mas exibe em São Paulo
 
 
 # Static files (CSS, JavaScript, Images)
@@ -125,12 +125,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Configurações de autenticação
-LOGIN_URL = 'login'               # rota nomeada do login (urls.py)
-LOGIN_REDIRECT_URL = 'index'      # para onde o usuário vai após login
-LOGOUT_REDIRECT_URL = 'login'     # para onde vai após logout
-
+LOGIN_REDIRECT_URL = '/estoque/'  # onde o usuário vai após login
+LOGIN_URL = '/'  # rota do login
 # Para arquivos estáticos (CSS, JS, imagens fixas)
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]

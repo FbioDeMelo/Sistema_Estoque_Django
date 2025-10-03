@@ -262,7 +262,6 @@
         }
 
         .modal-content p {
-            font-size: 1.1rem;
             margin-bottom: 25px;
             color: #2c3e50;
         }
@@ -295,12 +294,12 @@
         }
 
         .modal-btn.cancel {
-            background: #6c757d;
+            background: #000000;
             color: white;
         }
 
         .modal-btn.cancel:hover {
-            background: #545b62;
+            background: #3c4044;
             transform: translateY(-2px);
         }
 
@@ -471,6 +470,7 @@
     background: #f8f9fa;
 }
 
+
     </style>
 </head>
 <body>
@@ -493,33 +493,78 @@
         </div>
     </div>
 
-    <!-- SIDEBAR -->
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
-<a href="{% url 'index' %}"><i class="fas fa-home"></i> Início</a>
+  <!-- Início -->
+  <a href="{% url 'index' %}" class="{% if request.path == '/' %}active{% endif %}">
+    <i class="fas fa-home"></i> Início
+  </a>
+
+  <!-- Estoque -->
   {% if is_admin %}
-    <a href="{% url 'produtos_setor' 'todos' %}"><i class="fas fa-boxes"></i> Estoque Total</a>
+    <a href="{% url 'produtos_setor' 'todos' %}" 
+       class="{% if request.path == '/produtos/todos/' %}active{% endif %}">
+      <i class="fas fa-boxes"></i> Estoque Total
+    </a>
   {% else %}
     {% for setor in hub_info %}
-      <a href="{% url 'produtos_setor' setor.nome_setor %}">
-        <i class="fas fa-box"></i> Estoque -  <strong>{{ setor.nome_setor }}</strong>
+      <a href="{% url 'produtos_setor' setor.nome_setor %}" 
+         class="{% if request.path == '/produtos/{{ setor.nome_setor }}/' %}active{% endif %}">
+        <i class="fas fa-box"></i> Estoque - <strong>{{ setor.nome_setor }}</strong>
       </a>
     {% endfor %}
   {% endif %}
-  <a href="{% url 'adicionar_produto' %}"><i class="fas fa-plus-circle"></i> Adicionar Produto</a>
+
+  <!-- Adicionar Produto -->
+  <a href="{% url 'adicionar_produto' %}" 
+     class="{% if request.path == '/adicionar_produto/' %}active{% endif %}">
+    <i class="fas fa-plus-circle"></i> Adicionar Produto
+  </a>
+
   {% if is_admin %}
-    <a href="{% url 'adicionar_usuario' %}"><i class="fas fa-user-plus"></i> Adicionar Usuário</a>
-    <a href="{% url 'gerenciar_usuarios' %}"><i class="fas fa-users-cog"></i> Gerenciar Usuários</a>
+    <!-- Usuários -->
+    <a href="{% url 'adicionar_usuario' %}" 
+       class="{% if request.path == '/adicionar_usuario/' %}active{% endif %}">
+      <i class="fas fa-user-plus"></i> Adicionar Usuário
+    </a>
+    <a href="{% url 'gerenciar_usuarios' %}" 
+       class="{% if request.path == '/gerenciar_usuarios/' %}active{% endif %}">
+      <i class="fas fa-users-cog"></i> Gerenciar Usuários
+    </a>
   {% endif %}
+
   {% if is_admin %}
-    <a href="{% url 'movimentacoes' %}"><i class="fas fa-exchange-alt"></i> Ver Movimentações</a>
-    <a href="{% url 'dashboard_graficos' %}"><i class="fas fa-chart-line"></i> Dashboard de Gráficos</a>
+    <!-- Movimentações e Dashboard -->
+    <a href="{% url 'movimentacoes' %}" 
+       class="{% if request.path == '/movimentacoes/' %}active{% endif %}">
+      <i class="fas fa-exchange-alt"></i> Ver Movimentações
+    </a>
+    <a href="{% url 'dashboard_graficos' %}" 
+       class="{% if request.path == '/dashboard/' %}active{% endif %}">
+      <i class="fas fa-chart-line"></i> Dashboard de Gráficos
+    </a>
   {% endif %}
+
   {% if is_admin or pertence_geral %}
-    <a href="{% url 'colaborador_create' %}"><i class="fas fa-user-plus"></i> Cadastrar Colaborador</a>
-    <a href="{% url 'lista_colaboradores' %}"><i class="fas fa-users"></i> Ver Colaboradores</a>
-    <a href="{% url 'protocolo_create' %}"><i class="fas fa-envelope"></i> Protocolo de Correspondência</a>
+    <!-- Colaboradores -->
+    <a href="{% url 'colaborador_create' %}" 
+       class="{% if request.path == '/colaborador/novo/' %}active{% endif %}">
+      <i class="fas fa-user-plus"></i> Cadastrar Colaborador
+    </a>
+    <a href="{% url 'lista_colaboradores' %}" 
+       class="{% if request.path == '/colaboradores/' %}active{% endif %}">
+      <i class="fas fa-users"></i> Ver Colaboradores
+    </a>
+    <a href="{% url 'protocolo_create' %}" 
+       class="{% if request.path == '/protocolo/' %}active{% endif %}">
+      <i class="fas fa-envelope"></i> Protocolo de Correspondência
+    </a>
   {% endif %}
-  <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
+
+  <!-- Logout -->
+  <a href="{% url 'logout' %}">
+    <i class="fas fa-sign-out-alt"></i> Sair
+  </a>
 </div>
 
     <!-- CONTEÚDO PRINCIPAL -->
@@ -533,103 +578,58 @@
 
     <!-- Campo Colaborador -->
     <div class="form-group">
-        <label for="colaborador">Colaborador</label>
+        <label for="colaborador">Colaborador:</label>
         <input type="text" id="colaborador" name="colaborador" class="form-control" autocomplete="off">
         <div id="colaboradoresList" class="autocomplete-list"></div>
     </div>
 
     <!-- Campo Produto -->
     <div class="form-group">
-        <label for="produto">Produto</label>
-        <input type="text" id="produto" name="produto" class="form-control" autocomplete="off">
+        <label for="produto">Produto:</label>
+        <input type="text" id="produto" name="produto" class="form-control" autocomplete="off" placeholder="Ex: Notebook">
         <div id="produtosList" class="autocomplete-list"></div>
     </div>
 
     <!-- Campo Patrimônio -->
-    <div class="form-group">
-        <label for="patrimonio">Número de Patrimônio</label>
-        <input type="text" id="patrimonio" name="patrimonio" class="form-control" placeholder="Ex: 12345">
-    </div>
+<div class="form-group">
+    <label for="patrimonio">Número de Patrimônio:</label>
+    <input type="text" id="patrimonio" name="patrimonio" class="form-control" placeholder="Ex: 12345" maxlength="6">
+</div>
+
 
     <button type="button" class="submit-btn" onclick="confirmSubmit()">Registrar</button>
 </form>
-    </div>
 
-    <!-- Modal de Confirmação -->
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <p>Confirma adicionar o item ao colaborador?</p>
-            <div class="modal-buttons">
-                <button class="modal-btn confirm" onclick="submitForm()">Sim</button>
-                <button class="modal-btn cancel" onclick="closeModal()">Não</button>
-            </div>
+<!-- Modal de Confirmação -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <p>Confirma adicionar o item ao colaborador?</p>
+        <div class="modal-buttons">
+            <button class="modal-btn confirm" onclick="submitForm()">Sim</button>
+            <button class="modal-btn cancel" onclick="closeModal()">Não</button>
         </div>
     </div>
-
-    <!-- Loading -->
-    <div id="loading" class="loading">
-        <div class="loading-spinner"></div>
-        <p>Registrando item...</p>
+</div>
+<div id="errorModal" class="modal">
+    <div class="modal-content">
+        <h1>Opss...</h1>
+        <p>❌ Não é possível encontrar as informações.<br>
+        Verifique se selecionou colaborador, produto e patrimônio.</p>
+        <div class="modal-buttons">
+            <button class="modal-btn cancel" onclick="closeErrorModal()">Ok</button>
+        </div>
     </div>
+</div>
+<!-- Loading -->
+<div id="loading" class="loading">
+    <div class="loading-spinner"></div>
+    <p>Registrando item...</p>
+</div>
 
-    <script>
-        // FUNÇÕES DE RESPONSIVIDADE DO SISTEMA
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('mobile-open');
-        }
-
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const menuToggle = document.querySelector('.menu-toggle');
-            
-            if (window.innerWidth <= 768 && 
-                !sidebar.contains(event.target) && 
-                !menuToggle.contains(event.target)) {
-                sidebar.classList.remove('mobile-open');
-            }
-        });
-
-        let resizeTimeout;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(function() {
-                const sidebar = document.getElementById('sidebar');
-                if (window.innerWidth > 768) {
-                    sidebar.classList.remove('mobile-open');
-                }
-            }, 250);
-        });
-
-        // Aplicar classes de estilo aos campos do formulário
-        document.addEventListener('DOMContentLoaded', function() {
-            const formFields = document.querySelectorAll('input, select, textarea');
-            formFields.forEach(field => {
-                field.classList.add('form-control');
-            });
-
-            // Focar no primeiro campo do formulário
-            const firstField = document.querySelector('input:not([type="hidden"]), select, textarea');
-            if (firstField) {
-                firstField.focus();
-            }
-        });
-
-        // FUNÇÕES DO FORMULÁRIO (MANTIDAS DO CÓDIGO ORIGINAL)
-        function confirmSubmit() {
-            document.getElementById('confirmModal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('confirmModal').style.display = 'none';
-        }
-
-        function submitForm() {
-            closeModal();
-            document.getElementById('loading').style.display = 'flex';
-            document.getElementById('protocoloForm').submit();
-        }
+<script>
 document.addEventListener('DOMContentLoaded', function () {
+
+    // Função genérica de autocomplete
     function setupAutocomplete(inputId, listId, url, labelFn) {
         const input = document.getElementById(inputId);
         const list = document.getElementById(listId);
@@ -649,16 +649,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         const div = document.createElement("div");
                         div.classList.add("autocomplete-item");
                         div.innerHTML = labelFn(item);
+
                         div.addEventListener("click", function () {
-                            input.value = item.nome;
+                            input.value = item.nome;  // valor que vai para o form
+                            input.dataset.id = item.id; // guarda o ID real
                             list.innerHTML = "";
                         });
+
                         list.appendChild(div);
                     });
                 });
         });
 
-        // fecha ao clicar fora
+        // Fecha lista ao clicar fora
         document.addEventListener("click", function (e) {
             if (!list.contains(e.target) && e.target !== input) {
                 list.innerHTML = "";
@@ -666,17 +669,68 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Colaboradores
+    // Inicializa autocompletes
     setupAutocomplete("colaborador", "colaboradoresList", "/buscar_colaboradores/",
         item => `<strong>${item.nome}</strong><br><small>Código: ${item.codigo}</small>`
     );
 
-    // Produtos
     setupAutocomplete("produto", "produtosList", "/buscar_produtos/",
         item => `<strong>${item.nome}</strong><br><small>Qtd disponível: ${item.quantidade}</small>`
     );
+
+    // Intercepta o submit normal (Enter ou botão)
+    const form = document.getElementById('protocoloForm');
+    form.addEventListener("submit", function (e) {
+        e.preventDefault(); // impede envio direto
+
+        const colaborador = document.getElementById("colaborador");
+        const produto = document.getElementById("produto");
+        const patrimonio = document.getElementById("patrimonio");
+
+        // Validação antes de confirmar
+        if (!colaborador.dataset.id || !produto.dataset.id || !patrimonio.value.trim()) {
+            document.getElementById('errorModal').style.display = 'flex';
+            return;
+        }
+
+        // Se passou na validação, abre modal de confirmação
+        document.getElementById('confirmModal').style.display = 'flex';
+    });
+
+    // Limita patrimônio só em números
+    document.getElementById("patrimonio").addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, '');
+        if (this.value.length > 6) {
+            this.value = this.value.slice(0, 6);
+        }
+    });
 });
 
-    </script>
-</body>
-</html>
+// -------- Funções auxiliares --------
+function confirmSubmit() {
+    const colaborador = document.getElementById("colaborador");
+    const produto = document.getElementById("produto");
+    const patrimonio = document.getElementById("patrimonio");
+
+    if (!colaborador.dataset.id || !produto.dataset.id || !patrimonio.value.trim()) {
+        document.getElementById('errorModal').style.display = 'flex';
+        return;
+    }
+
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+}
+
+function closeErrorModal() {
+    document.getElementById('errorModal').style.display = 'none';
+}
+
+function submitForm() {
+    closeModal();
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('protocoloForm').submit();
+}
+</script>

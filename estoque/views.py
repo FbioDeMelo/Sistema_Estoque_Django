@@ -465,44 +465,54 @@ def listar_produtos(request):
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Protocolo, Produto
-from .forms import ProtocoloForm
+from .models import Protocolo, Produto, Colaborador, Setor  # adicionei Setor
 
 @login_required(login_url='login')
 def protocolo_create(request):
     if request.method == 'POST':
-        form = ProtocoloForm(request.POST)
-        if form.is_valid():
-            protocolo = form.save(commit=False)
-            produto = protocolo.item
+        colaborador_nome = request.POST.get('colaborador')
+        produto_nome = request.POST.get('produto')
+        patrimonio = request.POST.get('patrimonio')
 
-            if isinstance(produto, str):
-                try:
-                    produto = Produto.objects.get(nome=produto)
-                except Produto.DoesNotExist:
-                    messages.error(request, "Produto não encontrado!")
-                    return redirect('protocolo_create')
-
-            if produto.quantidade > 0:
-                produto.quantidade -= 1
-                produto.save()
-            else:
-                messages.error(request, "Estoque insuficiente!")
-                return redirect('protocolo_create')
-
-            protocolo.item = produto
-            protocolo.save()
-            messages.success(request, 'Item registrado e debitado do estoque!')
+        # Pega objetos reais
+        try:
+            colaborador = Colaborador.objects.get(nome=colaborador_nome)
+        except Colaborador.DoesNotExist:
+            messages.error(request, "Colaborador não encontrado!")
             return redirect('protocolo_create')
-    else:
-        form = ProtocoloForm()
 
-    # ✅ adiciona contexto da sidebar
-    context = {'form': form}
-    context.update(get_sidebar_context(request))
+        try:
+            produto = Produto.objects.get(nome=produto_nome)
+        except Produto.DoesNotExist:
+            messages.error(request, "Produto não encontrado!")
+            return redirect('protocolo_create')
+
+        # Checa estoque
+        if produto.quantidade <= 0:
+            messages.error(request, "Estoque insuficiente!")
+            return redirect('protocolo_create')
+
+        # Debita estoque
+        produto.quantidade -= 1
+        produto.save()
+
+        # Cria protocolo
+        Protocolo.objects.create(
+            colaborador=colaborador,
+            item=produto,
+            patrimonio=patrimonio
+        )
+
+        messages.success(request, "Item registrado e debitado do estoque!")
+        return redirect('protocolo_create')
+
+    # Contexto da sidebar
+    context = {
+        'is_admin': request.user.is_superuser,   # ou sua função de checagem
+        'hub_info': Setor.objects.all(),         # setores para sidebar
+    }
 
     return render(request, 'estoque/protocolo.html', context)
-
 
 from .forms import ColaboradorForm
 

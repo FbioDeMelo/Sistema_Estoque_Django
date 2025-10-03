@@ -73,9 +73,7 @@ class Colaborador(models.Model):
 
 class Protocolo(models.Model):
     colaborador = models.ForeignKey(Colaborador, on_delete=models.CASCADE)
-    item = models.CharField(max_length=100)
+    item = models.ForeignKey(Produto, on_delete=models.CASCADE)  # ✅ novo campo FK
+    item_nome = models.CharField(max_length=100, blank=True, null=True)  # ❗ mantém os dados antigos
     patrimonio = models.CharField(max_length=50)
     data = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.colaborador} - {self.item} ({self.patrimonio})"

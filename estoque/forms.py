@@ -26,18 +26,23 @@ class ProdutoForm(forms.ModelForm):
                 self.fields['setor_responsavel'].queryset = user.groups.all()
                 self.fields['setor_responsavel'].initial = user.groups.first()
                 self.fields['setor_responsavel'].disabled = True
+from django import forms
+from .models import Protocolo, Produto
+
 class ProtocoloForm(forms.ModelForm):
     class Meta:
         model = Protocolo
         fields = ['colaborador', 'item', 'patrimonio']
 
-    # Se quiser, podemos fazer o campo 'item' ser um select com produtos disponíveis
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['item'].widget = forms.Select(choices=[(p.nome, p.nome) for p in Produto.objects.all()])
+
+        # ✅ Agora item é um queryset de Produto (FK), não strings
+        self.fields['item'].queryset = Produto.objects.filter(quantidade__gt=0)
+        
         self.fields['colaborador'].widget.attrs.update({'class': 'form-control'})
         self.fields['patrimonio'].widget.attrs.update({'class': 'form-control'})
-        self.fields['item'].widget.attrs.update({'class': 'form-control'})    
+        self.fields['item'].widget.attrs.update({'class': 'form-control'})
 from django import forms
 from .models import Colaborador
 
@@ -49,3 +54,4 @@ class ColaboradorForm(forms.ModelForm):
             'codigo': forms.TextInput(attrs={'class': 'form-control'}),
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
         }   
+
