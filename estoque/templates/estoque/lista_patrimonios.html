@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventário de Patrimônios - Hub de Setores</title>
+    <style>
+        /* --- RESET & ESTILOS GERAIS --- */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI', Arial, sans-serif; line-height:1.6; background-color:#f8f9fa; color:#333; }
+
+        /* --- NAVBAR --- */
+        .navbar { position:fixed; top:0; left:0; width:100%; background:white; padding:12px 20px; box-shadow:0 2px 15px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; z-index:1000; }
+        .navbar-brand { display:flex; align-items:center; gap:15px; }
+        .navbar-logo { height:42px; width:auto; }
+        .navbar h1 { margin:0; font-size:1.4rem; font-weight:600; color:#000; }
+        .navbar-links { display:flex; align-items:center; gap:20px; }
+        .navbar-links span { font-size:0.95rem; opacity:0.9; color:#000; }
+        .navbar-links a { color:#000; text-decoration:none; padding:8px 16px; border-radius:4px; transition:all 0.3s ease; background: rgba(234,0,95,0.1); }
+        .navbar-links a:hover { background: rgba(234,0,95,0.2); transform: translateY(-1px); }
+
+        /* --- SIDEBAR --- */
+        .sidebar { position:fixed; top:66px; left:0; width:260px; height:calc(100vh - 66px); background:#fff; padding:25px 0; box-shadow:2px 0 15px rgba(0,0,0,0.05); overflow-y:auto; z-index:999; transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .sidebar a { display:flex; align-items:center; color:#555; padding:12px 25px; text-decoration:none; border-left:3px solid transparent; margin:5px 0; transition:all 0.3s ease; }
+        .sidebar a:hover { background:#f8f9fa; color:#2c3e50; border-left-color:#ea005f; transform: translateX(5px); }
+        .sidebar a.active { border-left-color:#ea005f; font-weight:600; color:#2c3e50; }
+
+        /* --- CONTEÚDO --- */
+        .content { margin-top:66px; margin-left:260px; padding:30px; min-height:calc(100vh - 66px); transition:margin-left 0.3s ease; }
+        .page-header { background:white; padding:25px 30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.08); margin-bottom:30px; border-left:4px solid #ea005f; }
+        .page-header h1 { color:#2c3e50; font-size:1.8rem; margin-bottom:10px; font-weight:600; display:flex; align-items:center; gap:10px; }
+        .page-header h1::before { content:"📋"; font-size:1.2em; }
+        .page-header p { color:#666; font-size:1rem; }
+
+        /* --- TABELA --- */
+        .table-container { background:white; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.08); overflow:hidden; margin-bottom:30px; }
+        .patrimonios-table { width:100%; border-collapse:collapse; font-size:0.95rem; }
+        .patrimonios-table th { background:#000; color:white; padding:15px 12px; text-align:left; font-weight:600; border-bottom:2px solid #e2e8f0; }
+        .patrimonios-table td { padding:12px; border-bottom:1px solid #e2e8f0; transition:background-color 0.2s ease; }
+        .patrimonios-table tr:hover td { background-color:#f8fafc; }
+        .patrimonios-table tr:last-child td { border-bottom:none; }
+        .patrimonio-badge { display:inline-block; background:#e3f2fd; color:#1976d2; padding:6px 12px; border-radius:15px; font-size:0.85rem; font-weight:600; border:1px solid #bbdefb; }
+
+        /* --- EMPTY STATE --- */
+        .empty-state { text-align:center; padding:60px 30px; color:#666; }
+        .empty-icon { font-size:3rem; margin-bottom:15px; opacity:0.5; }
+
+        /* --- ACTION LINKS --- */
+        .action-links { text-align:center; padding:20px; background:white; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.08); }
+        .action-link { display:inline-flex; align-items:center; gap:8px; color:#ea005f; text-decoration:none; padding:10px 20px; margin:0 10px; border-radius:5px; transition:all 0.3s ease; font-weight:500; background:#f8f9fa; }
+        .action-link:hover { color:#c4004b; background:#e9ecef; transform: translateY(-2px); text-decoration:none; }
+
+        /* --- PAGINAÇÃO --- */
+        .pagination { text-align:center; margin:20px 0; }
+        .pagination a, .pagination span.current { display:inline-block; padding:8px 12px; margin:0 3px; border-radius:5px; text-decoration:none; }
+        .pagination a { background:#f0f0f0; color:#333; }
+        .pagination a:hover { background:#ea005f; color:#fff; }
+        .pagination span.current { background:#ea005f; color:#fff; }
+
+        /* --- RESPONSIVO --- */
+        @media (max-width:768px){
+            .navbar { padding:10px 15px; }
+            .navbar-brand h1 { font-size:1.2rem; }
+            .navbar-links span { display:none; }
+            .sidebar { width:280px; transform:translateX(-100%); top:62px; height:calc(100vh - 62px); }
+            .sidebar.mobile-open{transform:translateX(0);}
+            .content { margin-left:0; padding:20px 15px; margin-top:62px; }
+            .page-header { padding:20px; }
+            .page-header h1 { font-size:1.5rem; }
+            .patrimonios-table { font-size:0.85rem; }
+            .patrimonios-table th, .patrimonios-table td { padding:10px 8px; }
+            .menu-toggle{ display:block; background:none; border:none; color:#000; font-size:1.5rem; cursor:pointer; padding:5px; }
+            .action-link { display:block; margin:10px 0; text-align:center; }
+        }
+        @media (min-width:769px){ .menu-toggle{ display:none; } }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="navbar-brand">
+            <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" alt="Faculdade Libano" class="navbar-logo">
+        </div>
+        <button class="menu-toggle" aria-label="Abrir menu" onclick="toggleSidebar()">☰</button>
+        <div class="navbar-links">
+            <span>
+                {{ request.user.username }}
+                {% if not is_admin %}
+                    – {{ request.user.groups.first.name }}
+                {% else %}
+                    – Admin
+                {% endif %}
+            </span>
+            <a href="{% url 'logout' %}">Sair</a>
+        </div>
+    </header>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        {% comment %} Links dinâmicos do menu {% endcomment %}
+        <a href="{% url 'index' %}" class="{% if request.path == '/' %}active{% endif %}"><i class="fas fa-home"></i> Início</a>
+        
+        {% if is_admin %}
+            <a href="{% url 'produtos_setor' 'todos' %}" class="{% if request.path == '/produtos/todos/' %}active{% endif %}"><i class="fas fa-boxes"></i> Estoque Total</a>
+        {% else %}
+            {% for setor in hub_info %}
+            <a href="{% url 'produtos_setor' setor.nome_setor %}" class="{% if request.path == '/produtos/{{ setor.nome_setor }}/' %}active{% endif %}"><i class="fas fa-box"></i> Estoque - <strong>{{ setor.nome_setor }}</strong></a>
+            {% endfor %}
+        {% endif %}
+
+        <a href="{% url 'adicionar_produto' %}" class="{% if request.path == '/adicionar_produto/' %}active{% endif %}"><i class="fas fa-plus-circle"></i> Adicionar Produto</a>
+
+        {% if is_admin %}
+        <a href="{% url 'adicionar_usuario' %}" class="{% if request.path == '/adicionar_usuario/' %}active{% endif %}"><i class="fas fa-user-plus"></i> Adicionar Usuário</a>
+        <a href="{% url 'gerenciar_usuarios' %}" class="{% if request.path == '/gerenciar_usuarios/' %}active{% endif %}"><i class="fas fa-users-cog"></i> Gerenciar Usuários</a>
+        <a href="{% url 'movimentacoes' %}" class="{% if request.path == '/movimentacoes/' %}active{% endif %}"><i class="fas fa-exchange-alt"></i> Ver Movimentações</a>
+        <a href="{% url 'dashboard_graficos' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}"><i class="fas fa-chart-line"></i> Dashboard de Gráficos</a>
+        {% endif %}
+
+        {% if is_admin or pertence_geral %}
+        <a href="{% url 'colaborador_create' %}" class="{% if request.path == '/colaborador/novo/' %}active{% endif %}"><i class="fas fa-user-plus"></i> Cadastrar Colaborador</a>
+        <a href="{% url 'lista_colaboradores' %}" class="{% if request.path == '/colaboradores/' %}active{% endif %}"><i class="fas fa-users"></i> Ver Colaboradores</a>
+        <a href="{% url 'protocolo_create' %}" class="{% if request.path == '/protocolo/' %}active{% endif %}"><i class="fas fa-envelope"></i> Protocolo de Correspondência</a>
+        <a href="{% url 'lista_patrimonios' %}" class="{% if request.path == '/patrimonios/' %}active{% endif %}"><i class="fas fa-archive"></i> Inventário de Patrimônios</a>
+        {% endif %}
+
+        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="content">
+        <h1>Inventário de Patrimônios</h1>
+
+        <!-- Pesquisa -->
+        <div style="margin-bottom:15px; text-align:center;">
+            <form method="get" action="" style="display:inline-flex; gap:8px; align-items:center;">
+                <input type="text" name="q" placeholder="Pesquisar por item ou patrimônio" value="{{ request.GET.q|default:'' }}" style="padding:6px 10px; border-radius:5px; border:1px solid #ccc; min-width:280px;">
+                <button type="submit" style="padding:6px 12px; border:none; border-radius:5px; background:#ea005f; color:white; cursor:pointer;">🔍</button>
+            </form>
+        </div>
+
+        <!-- Tabela -->
+        <div class="table-container">
+            <table class="patrimonios-table">
+                <thead>
+                    <tr>
+                        <th>Patrimônio</th>
+                        <th>Item</th>
+                        <th>Colaborador</th>
+                        <th>Data de Registro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in patrimonios %}
+                    <tr>
+                        <td><span class="patrimonio-badge">{{ p.patrimonio }}</span></td>
+                        <td>{{ p.item.nome }}</td>
+                        <td>{{ p.colaborador.nome }}</td>
+                        <td>{{ p.data|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <p>Nenhum patrimônio registrado no momento.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        <div class="pagination">
+            {% if patrimonios.has_previous %}
+                <a href="?page=1{% if q %}&q={{ q }}{% endif %}">&laquo; primeira</a>
+                <a href="?page={{ patrimonios.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">anterior</a>
+            {% endif %}
+            <span class="current">Página {{ patrimonios.number }} de {{ patrimonios.paginator.num_pages }}.</span>
+            {% if patrimonios.has_next %}
+                <a href="?page={{ patrimonios.next_page_number }}{% if q %}&q={{ q }}{% endif %}">próxima</a>
+                <a href="?page={{ patrimonios.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}">última &raquo;</a>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+
+        document.addEventListener('click', function(event){
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            if(window.innerWidth<=768 && !sidebar.contains(event.target) && !menuToggle.contains(event.target)){
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if(window.innerWidth>768) document.getElementById('sidebar').classList.remove('mobile-open');
+        });
+        
+    </script>
+</body>
+</html>

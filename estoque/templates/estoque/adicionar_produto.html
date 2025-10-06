@@ -391,6 +391,8 @@
     height: 42px;
     width: auto;
 }
+        .sidebar a.active { border-left-color:#ea005f; font-weight:600; color:#2c3e50; }
+
 /* Modal genérico */
 .modal {
   display: none;
@@ -489,10 +491,24 @@
     <a href="{% url 'movimentacoes' %}"><i class="fas fa-exchange-alt"></i> Ver Movimentações</a>
     <a href="{% url 'dashboard_graficos' %}"><i class="fas fa-chart-line"></i> Dashboard de Gráficos</a>
   {% endif %}
-  {% if is_admin or pertence_geral %}
-    <a href="{% url 'colaborador_create' %}"><i class="fas fa-user-plus"></i> Cadastrar Colaborador</a>
-    <a href="{% url 'lista_colaboradores' %}"><i class="fas fa-users"></i> Ver Colaboradores</a>
-    <a href="{% url 'protocolo_create' %}"><i class="fas fa-envelope"></i> Protocolo de Correspondência</a>
+   {% if is_admin or pertence_geral %}
+    <!-- Colaboradores -->
+    <a href="{% url 'colaborador_create' %}" 
+       class="{% if request.path == '/colaborador/novo/' %}active{% endif %}">
+      <i class="fas fa-user-plus"></i> Cadastrar Colaborador
+    </a>
+    <a href="{% url 'lista_colaboradores' %}" 
+       class="{% if request.path == '/colaboradores/' %}active{% endif %}">
+      <i class="fas fa-users"></i> Ver Colaboradores
+    </a>
+    <a href="{% url 'protocolo_create' %}" 
+       class="{% if request.path == '/protocolo/' %}active{% endif %}">
+      <i class="fas fa-envelope"></i> Protocolo de Correspondência
+    </a>
+    <a href="{% url 'lista_patrimonios' %}" 
+       class="{% if request.path == '/patrimonios/' %}active{% endif %}">
+      <i class="fas fa-archive"></i> Inventário de Patrimônios
+    </a>
   {% endif %}
   <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
 </div>
@@ -666,6 +682,33 @@
                 }
             }, 250);
         });
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebarLinks = document.querySelectorAll('.sidebar a');
+    let currentPath = window.location.pathname;
+
+    // Remove barra final, se houver
+    if (currentPath.length > 1 && currentPath.endsWith('/')) {
+        currentPath = currentPath.slice(0, -1);
+    }
+
+    sidebarLinks.forEach(link => {
+        // Remove active de todos
+        link.classList.remove('active');
+
+        let linkPath = link.getAttribute('href');
+
+        // Remove barra final do link também
+        if (linkPath.length > 1 && linkPath.endsWith('/')) {
+            linkPath = linkPath.slice(0, -1);
+        }
+
+        // Adiciona active se bater o caminho
+        if (linkPath === currentPath) {
+            link.classList.add('active');
+        }
+    });
+});
+
     </script>
 </body>
 </html>

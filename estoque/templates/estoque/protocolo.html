@@ -103,6 +103,7 @@
             transition: all 0.3s ease;
             border-left: 3px solid transparent;
             margin: 5px 0;
+            gap: 10px; 
         }
 
         .sidebar a:hover {
@@ -469,6 +470,18 @@
 .autocomplete-item:hover {
     background: #f8f9fa;
 }
+        .sidebar a.active { border-left-color:#ea005f; font-weight:600; color:#2c3e50; }
+.sidebar a i {
+  margin-right: 12px;        /* espaço entre ícone e texto */
+  font-size: 1.1rem;         /* tamanho proporcional */
+  width: 22px;               /* largura fixa para alinhamento */
+  text-align: center;        /* centraliza ícone dentro da largura */
+  flex-shrink: 0;            /* evita compressão */
+  display: flex;             /* corrige baseline */
+  align-items: center;       /* centraliza verticalmente */
+  justify-content: center;   /* centraliza horizontalmente */
+  line-height: 1;            /* evita desalinhamento por altura de linha */
+}
 
 
     </style>
@@ -559,8 +572,11 @@
        class="{% if request.path == '/protocolo/' %}active{% endif %}">
       <i class="fas fa-envelope"></i> Protocolo de Correspondência
     </a>
+    <a href="{% url 'lista_patrimonios' %}" 
+       class="{% if request.path == '/patrimonios/' %}active{% endif %}">
+      <i class="fas fa-archive"></i> Inventário de Patrimônios
+    </a>
   {% endif %}
-
   <!-- Logout -->
   <a href="{% url 'logout' %}">
     <i class="fas fa-sign-out-alt"></i> Sair
@@ -593,11 +609,14 @@
     <!-- Campo Patrimônio -->
 <div class="form-group">
     <label for="patrimonio">Número de Patrimônio:</label>
-    <input type="text" id="patrimonio" name="patrimonio" class="form-control" placeholder="Ex: 12345" maxlength="6">
+    <input type="text" id="patrimonio" name="patrimonio" class="form-control" placeholder="Ex: 12345" maxlength="20" autocomplete="off">
+    <div id="patrimonioError" style="color:#e74c3c; display:none; margin-top:6px;"></div>
 </div>
 
 
-    <button type="button" class="submit-btn" onclick="confirmSubmit()">Registrar</button>
+<button type="button" class="submit-btn" id="registrarBtn" onclick="confirmSubmit()" disabled>
+    Registrar
+</button>
 </form>
 
 <!-- Modal de Confirmação -->
@@ -733,4 +752,61 @@ function submitForm() {
     document.getElementById('loading').style.display = 'flex';
     document.getElementById('protocoloForm').submit();
 }
+document.addEventListener('DOMContentLoaded', function () {
+    const patrimonioInput = document.getElementById('patrimonio');
+    const patrimonioError = document.getElementById('patrimonioError');
+    const registrarBtn = document.getElementById('registrarBtn');
+
+    let patrimonioValido = false;
+    let lastChecked = ''; // evita requisições repetidas
+
+    // Função que verifica via fetch
+    function checarPatrimonio(patrimonio) {
+        if (!patrimonio) {
+            patrimonioError.style.display = 'none';
+            patrimonioValido = false;
+            registrarBtn.disabled = true;
+            return;
+        }
+        if (patrimonio === lastChecked) return;
+        lastChecked = patrimonio;
+
+        fetch(`/verifica_patrimonio/?patrimonio=${encodeURIComponent(patrimonio)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.exists) {
+                    patrimonioError.textContent = '❌ Este patrimônio já está registrado!';
+                    patrimonioError.style.display = 'block';
+                    patrimonioValido = false;
+                    registrarBtn.disabled = true;
+                } else {
+                    patrimonioError.style.display = 'none';
+                    patrimonioValido = true;
+                    registrarBtn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error('Erro ao verificar patrimônio:', err);
+                patrimonioError.style.display = 'none';
+                patrimonioValido = false;
+                registrarBtn.disabled = true;
+            });
+    }
+
+    // dispara verificação ao perder o foco
+    patrimonioInput.addEventListener('blur', function () {
+        const v = this.value.trim();
+        if (v) checarPatrimonio(v);
+    });
+
+    // debounce para verificar enquanto digita
+    let debounceTimer = null;
+    patrimonioInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        const v = this.value.trim();
+        debounceTimer = setTimeout(() => {
+            if (v.length >= 3) checarPatrimonio(v);
+        }, 400);
+    });
+});
 </script>

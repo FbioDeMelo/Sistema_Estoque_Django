@@ -354,6 +354,7 @@
     .sidebar a i {
   margin-right: 8px; /* ajusta o espaço entre ícone e texto */
 }
+        .sidebar a.active { border-left-color:#ea005f; font-weight:600; color:#2c3e50; }
 
     </style>
 </head>
@@ -376,34 +377,87 @@
             <a href="{% url 'logout' %}">Sair</a>
         </div>
     </div>
-    <!-- SIDEBAR IDÊNTICO AO PRIMEIRO CÓDIGO -->
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
-<a href="{% url 'index' %}"><i class="fas fa-home"></i> Início</a>
+
+  <!-- Início -->
+  {% url 'index' as index_url %}
+  <a href="{{ index_url }}" class="{% if request.path == index_url %}active{% endif %}">
+    <i class="fas fa-home"></i> Início
+  </a>
+
+  <!-- Estoque -->
   {% if is_admin %}
-    <a href="{% url 'produtos_setor' 'todos' %}"><i class="fas fa-boxes"></i> Estoque Total</a>
+    {% url 'produtos_setor' 'todos' as produtos_todos_url %}
+    <a href="{{ produtos_todos_url }}" class="{% if request.path == produtos_todos_url %}active{% endif %}">
+      <i class="fas fa-boxes"></i> Estoque Total
+    </a>
   {% else %}
     {% for setor in hub_info %}
-      <a href="{% url 'produtos_setor' setor.nome_setor %}">
-        <i class="fas fa-box"></i> Estoque -  <strong>{{ setor.nome_setor }}</strong>
+      {% url 'produtos_setor' setor.nome_setor as setor_url %}
+      <a href="{{ setor_url }}" class="{% if request.path == setor_url %}active{% endif %}">
+        <i class="fas fa-box"></i> Estoque - <strong>{{ setor.nome_setor }}</strong>
       </a>
     {% endfor %}
   {% endif %}
-  <a href="{% url 'adicionar_produto' %}"><i class="fas fa-plus-circle"></i> Adicionar Produto</a>
+
+  <!-- Adicionar Produto -->
+  {% url 'adicionar_produto' as adicionar_produto_url %}
+  <a href="{{ adicionar_produto_url }}" class="{% if request.path == adicionar_produto_url %}active{% endif %}">
+    <i class="fas fa-plus-circle"></i> Adicionar Produto
+  </a>
+
   {% if is_admin %}
-    <a href="{% url 'adicionar_usuario' %}"><i class="fas fa-user-plus"></i> Adicionar Usuário</a>
-    <a href="{% url 'gerenciar_usuarios' %}"><i class="fas fa-users-cog"></i> Gerenciar Usuários</a>
+    <!-- Usuários -->
+    {% url 'adicionar_usuario' as adicionar_usuario_url %}
+    {% url 'gerenciar_usuarios' as gerenciar_usuarios_url %}
+    <a href="{{ adicionar_usuario_url }}" class="{% if request.path == adicionar_usuario_url %}active{% endif %}">
+      <i class="fas fa-user-plus"></i> Adicionar Usuário
+    </a>
+    <a href="{{ gerenciar_usuarios_url }}" class="{% if request.path == gerenciar_usuarios_url %}active{% endif %}">
+      <i class="fas fa-users-cog"></i> Gerenciar Usuários
+    </a>
   {% endif %}
+
   {% if is_admin %}
-    <a href="{% url 'movimentacoes' %}"><i class="fas fa-exchange-alt"></i> Ver Movimentações</a>
-    <a href="{% url 'dashboard_graficos' %}"><i class="fas fa-chart-line"></i> Dashboard de Gráficos</a>
+    <!-- Movimentações e Dashboard -->
+    {% url 'movimentacoes' as movimentacoes_url %}
+    {% url 'dashboard_graficos' as dashboard_url %}
+    <a href="{{ movimentacoes_url }}" class="{% if request.path == movimentacoes_url %}active{% endif %}">
+      <i class="fas fa-exchange-alt"></i> Ver Movimentações
+    </a>
+    <a href="{{ dashboard_url }}" class="{% if request.path == dashboard_url %}active{% endif %}">
+      <i class="fas fa-chart-line"></i> Dashboard de Gráficos
+    </a>
   {% endif %}
+
   {% if is_admin or pertence_geral %}
-    <a href="{% url 'colaborador_create' %}"><i class="fas fa-user-plus"></i> Cadastrar Colaborador</a>
-    <a href="{% url 'lista_colaboradores' %}"><i class="fas fa-users"></i> Ver Colaboradores</a>
-    <a href="{% url 'protocolo_create' %}"><i class="fas fa-envelope"></i> Protocolo de Correspondência</a>
+    <!-- Colaboradores -->
+    {% url 'colaborador_create' as colaborador_create_url %}
+    {% url 'lista_colaboradores' as lista_colaboradores_url %}
+    {% url 'protocolo_create' as protocolo_create_url %}
+    {% url 'lista_patrimonios' as lista_patrimonios_url %}
+    <a href="{{ colaborador_create_url }}" class="{% if request.path == colaborador_create_url %}active{% endif %}">
+      <i class="fas fa-user-plus"></i> Cadastrar Colaborador
+    </a>
+    <a href="{{ lista_colaboradores_url }}" class="{% if request.path == lista_colaboradores_url %}active{% endif %}">
+      <i class="fas fa-users"></i> Ver Colaboradores
+    </a>
+    <a href="{{ protocolo_create_url }}" class="{% if request.path == protocolo_create_url %}active{% endif %}">
+      <i class="fas fa-envelope"></i> Protocolo de Correspondência
+    </a>
+    <a href="{{ lista_patrimonios_url }}" class="{% if request.path == lista_patrimonios_url %}active{% endif %}">
+      <i class="fas fa-archive"></i> Inventário de Patrimônios
+    </a>
   {% endif %}
-  <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
+
+  <!-- Logout -->
+  {% url 'logout' as logout_url %}
+  <a href="{{ logout_url }}">
+    <i class="fas fa-sign-out-alt"></i> Sair
+  </a>
 </div>
+
 
     <!-- CONTEÚDO PRINCIPAL -->
     <div class="content">

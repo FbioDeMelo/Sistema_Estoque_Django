@@ -613,3 +613,56 @@ def buscar_produtos(request):
 
     results = [{"id": p.id, "nome": p.nome, "quantidade": p.quantidade} for p in produtos]
     return JsonResponse(results, safe=False)
+from django.http import JsonResponse
+from .models import Protocolo
+
+def verifica_patrimonio(request):
+    """
+    GET ?patrimonio=12345  -> retorna {"exists": true/false}
+    """
+    patrimonio = request.GET.get('patrimonio', '').strip()
+    if not patrimonio:
+        return JsonResponse({'exists': False})
+    exists = Protocolo.objects.filter(patrimonio=patrimonio).exists()
+    return JsonResponse({'exists': exists})
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.core.paginator import Paginator
+from django.db.models import Q   # ✅ IMPORTANTE
+from .models import Protocolo  # seu modelo de patrimônio
+@login_required
+def lista_patrimonios(request):
+    user = request.user
+
+    # só superuser ou grupo "Geral" pode acessar
+    if not (user.is_superuser or user.groups.filter(name="Geral").exists()):
+        return redirect("index")
+
+    # lista de patrimonios
+    patrimonios_list = Protocolo.objects.select_related("item", "colaborador").all().order_by("-data")
+
+    # filtro de pesquisa
+    termo = request.GET.get('q', '').strip()
+    if termo:
+        patrimonios_list = patrimonios_list.filter(
+            Q(item__nome__icontains=termo) |
+            Q(patrimonio__icontains=termo) |
+            Q(colaborador__nome__icontains=termo)
+        )
+
+    # paginação
+    paginator = Paginator(patrimonios_list, 100)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'patrimonios': page_obj,
+        'q': termo,
+        'is_admin': user.is_superuser,
+        'pertence_geral': user.groups.filter(name="Geral").exists(),  # ✅ aqui
+        'pagina_atual': 'lista_patrimonios',
+    }
+    return render(request, "estoque/lista_patrimonios.html", context)
+
+    

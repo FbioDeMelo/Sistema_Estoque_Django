@@ -46,6 +46,9 @@ urlpatterns = [
     # Busca
     path("buscar_colaboradores/", views.buscar_colaboradores, name="buscar_colaboradores"),
     path("buscar_produtos/", views.buscar_produtos, name="buscar_produtos"),
+    path('verifica_patrimonio/', views.verifica_patrimonio, name='verifica_patrimonio'),
+    path("patrimonios/", views.lista_patrimonios, name="lista_patrimonios"),
+
 ]
 
 # Para servir arquivos estáticos em modo DEBUG

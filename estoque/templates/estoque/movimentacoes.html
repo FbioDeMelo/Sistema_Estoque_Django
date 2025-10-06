@@ -441,6 +441,7 @@
                         .sidebar a i {
   margin-right: 8px; /* ajusta o espaço entre ícone e texto */
 }
+        .sidebar a.active { border-left-color:#ea005f; font-weight:600; color:#2c3e50; }
 
     </style>
 </head>
@@ -505,7 +506,7 @@
     </a>
   {% endif %}
 
-  {% if is_admin or pertence_geral %}
+   {% if is_admin or pertence_geral %}
     <!-- Colaboradores -->
     <a href="{% url 'colaborador_create' %}" 
        class="{% if request.path == '/colaborador/novo/' %}active{% endif %}">
@@ -518,6 +519,10 @@
     <a href="{% url 'protocolo_create' %}" 
        class="{% if request.path == '/protocolo/' %}active{% endif %}">
       <i class="fas fa-envelope"></i> Protocolo de Correspondência
+    </a>
+    <a href="{% url 'lista_patrimonios' %}" 
+       class="{% if request.path == '/patrimonios/' %}active{% endif %}">
+      <i class="fas fa-archive"></i> Inventário de Patrimônios
     </a>
   {% endif %}
 
