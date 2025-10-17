@@ -51,6 +51,7 @@ def index(request):
         'total_produtos': total_produtos,
         'chart_labels': json.dumps(chart_labels),
         'chart_data': json.dumps(chart_data),
+        'notificacoes': notificacoes,  # 👈 ADICIONE ESSA LINHA
     })
 # -------------------- Função para verificar se é ADMIN --------------------
 def is_admin(user):
@@ -465,7 +466,7 @@ def listar_produtos(request):
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Protocolo, Produto, Colaborador, Setor  # adicionei Setor
+from .models import Protocolo, Produto, Colaborador, Setor
 
 @login_required(login_url='login')
 def protocolo_create(request):
@@ -507,12 +508,28 @@ def protocolo_create(request):
         return redirect('protocolo_create')
 
     # Contexto da sidebar
+    user = request.user
+    is_admin = user.is_superuser or user.groups.filter(name='ADMIN').exists()
+    pertence_geral = user.groups.filter(name__iexact='Geral').exists()
+
+    # Monta hub_info para o sidebar (nome_setor + total_produtos)
+    setores = Setor.objects.all()
+    hub_info = [
+        {
+            'nome_setor': s.nome_setor,
+            'total_produtos': Produto.objects.filter(setor_responsavel__name=s.nome_setor).count()
+        }
+        for s in setores
+    ]
+
     context = {
-        'is_admin': request.user.is_superuser,   # ou sua função de checagem
-        'hub_info': Setor.objects.all(),         # setores para sidebar
+        'is_admin': is_admin,
+        'hub_info': hub_info,
+        'pertence_geral': pertence_geral,
     }
 
     return render(request, 'estoque/protocolo.html', context)
+
 
 from .forms import ColaboradorForm
 
@@ -575,7 +592,7 @@ def exportar_colaborador(request, colaborador_id):
 # Função que retorna os dados comuns da sidebar
 def get_sidebar_context(request):
     user_groups = request.user.groups.all()
-    is_admin = request.user.groups.filter(name='ADMIN').exists() or request.user.is_superuser
+    is_admin = request.user.groups.filter(name__iexact='ADMIN').exists() or request.user.is_superuser
     pertence_geral = request.user.groups.filter(name__iexact='Geral').exists()
 
     if is_admin:
@@ -594,7 +611,7 @@ def get_sidebar_context(request):
     return {
         'is_admin': is_admin,
         'hub_info': hub_info,
-        'pertence_geral': pertence_geral
+        'pertence_geral': pertence_geral,
     }
 
 from django.http import JsonResponse
@@ -626,23 +643,15 @@ def verifica_patrimonio(request):
     exists = Protocolo.objects.filter(patrimonio=patrimonio).exists()
     return JsonResponse({'exists': exists})
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.core.paginator import Paginator
-from django.db.models import Q   # ✅ IMPORTANTE
-from .models import Protocolo  # seu modelo de patrimônio
+from django.contrib.auth.models import Group
+from .models import Protocolo, Produto
+
 @login_required
 def lista_patrimonios(request):
     user = request.user
 
-    # só superuser ou grupo "Geral" pode acessar
-    if not (user.is_superuser or user.groups.filter(name="Geral").exists()):
-        return redirect("index")
-
-    # lista de patrimonios
     patrimonios_list = Protocolo.objects.select_related("item", "colaborador").all().order_by("-data")
 
-    # filtro de pesquisa
     termo = request.GET.get('q', '').strip()
     if termo:
         patrimonios_list = patrimonios_list.filter(
@@ -651,18 +660,89 @@ def lista_patrimonios(request):
             Q(colaborador__nome__icontains=termo)
         )
 
-    # paginação
     paginator = Paginator(patrimonios_list, 100)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # ✅ Novo bloco
+    is_admin = user.is_superuser
+    pertence_geral = user.groups.filter(name__iexact="Geral").exists()
+    user_groups = user.groups.all()
+    setores = Group.objects.all() if is_admin else user_groups
+    hub_info = [
+        {
+            "nome_setor": s.name,
+            "total_produtos": Produto.objects.filter(setor_responsavel=s).count(),
+        }
+        for s in setores
+    ]
+
     context = {
         'patrimonios': page_obj,
         'q': termo,
-        'is_admin': user.is_superuser,
-        'pertence_geral': user.groups.filter(name="Geral").exists(),  # ✅ aqui
+        'is_admin': is_admin,
+        'pertence_geral': pertence_geral,
+        'hub_info': hub_info,  # ✅ ESSENCIAL
         'pagina_atual': 'lista_patrimonios',
     }
+
     return render(request, "estoque/lista_patrimonios.html", context)
 
-    
+    from .utils import checar_estoque
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from .models import Notificacao
+from django.utils import timezone
+
+@login_required
+def notificacoes(request):
+    user = request.user
+    is_admin = user.groups.filter(name='ADMIN').exists() or user.is_superuser
+
+    if is_admin:
+        # Admin vê todas as notificações não vistas
+        notifs = Notificacao.objects.filter(vista=False).order_by('-criado_em')
+    else:
+        # Usuário normal vê apenas notificações do seu setor
+        grupos = user.groups.all()
+        notifs = Notificacao.objects.filter(vista=False, setor__in=grupos).order_by('-criado_em')
+
+    data = []
+    for n in notifs:
+        data.append({
+            'id': n.id,
+            'mensagem': n.mensagem,
+            'produto': n.produto.nome,
+            'setor': n.setor.name if n.setor else '',
+            'criado_em': n.criado_em.strftime('%d/%m/%Y %H:%M')
+        })
+
+    return JsonResponse({'notificacoes': data})
+@login_required
+def marcar_vista(request):
+    notif_id = request.POST.get('id')
+    try:
+        notif = Notificacao.objects.get(id=notif_id)
+        # só marca como vista se for admin ou do setor correto
+        if request.user.groups.filter(name='ADMIN').exists() or notif.setor in request.user.groups.all():
+            notif.vista = True
+            notif.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Sem permissão'})
+    except Notificacao.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Notificação não encontrada'})
+# views.py
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from estoque.models import Profile
+
+@login_required
+def atualizar_avatar(request):
+    if request.method == 'POST':
+        avatar_url = request.POST.get('avatar')
+        profile, created = Profile.objects.get_or_create(user=request.user)
+        profile.avatar_url = avatar_url
+        profile.save()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Método inválido'})

@@ -48,6 +48,9 @@ urlpatterns = [
     path("buscar_produtos/", views.buscar_produtos, name="buscar_produtos"),
     path('verifica_patrimonio/', views.verifica_patrimonio, name='verifica_patrimonio'),
     path("patrimonios/", views.lista_patrimonios, name="lista_patrimonios"),
+    path('notificacoes/', views.notificacoes, name='notificacoes'),
+    path('marcar_vista/', views.marcar_vista, name='marcar_vista'),
+    path('atualizar-avatar/', views.atualizar_avatar, name='atualizar_avatar'),
 
 ]
 

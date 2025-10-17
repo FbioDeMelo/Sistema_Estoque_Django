@@ -91,19 +91,171 @@
 }
         .sidebar a.active { border-left-color:#ea005f; font-weight:600; color:#2c3e50; }
 
-</style>
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* deixa circular */
+  object-fit: cover;
+  margin-right: -14px;
+}
+/* Container principal das notificações */
+#notificacoes-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Ícone do sino */
+#notificacoes-dropdown .fa-bell {
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.3s ease;
+  padding: 8px;
+  border-radius: 50%;
+}
+
+#notificacoes-dropdown .fa-bell:hover {
+  color: #333;
+  background-color: #f5f5f5;
+  transform: scale(1.1);
+}
+
+/* Container das notificações */
+#notificacoes-container {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Indicador de notificações não lidas */
+#notificacoes-dropdown.has-notifications .fa-bell {
+  color: #007bff;
+  position: relative;
+}
+
+#notificacoes-dropdown.has-notifications .fa-bell::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  background-color: #ff4757;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+/* Estados do dropdown */
+#notificacoes-container.show {
+  display: block;
+}
+
+#notificacoes-container.hidden {
+  display: none;
+}
+
+/* Scrollbar personalizada */
+#notificacoes-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+#notificacoes-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0 8px 8px 0;
+}
+
+#notificacoes-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+#notificacoes-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+#notificacoes-dropdown.has-notifications .fa-bell::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  background-color: #ff4757;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+  #notificacoes-container {
+    width: 280px;
+    right: -50px;
+  }
+}
+
+/* Estado vazio */
+#notificacoes-container:empty::before {
+  content: "Nenhuma notificação";
+  display: block;
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-style: italic;
+}
+  </style>
 </head>
 <body>
-
-<!-- Navbar -->
 <div class="navbar">
-    <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" alt="Faculdade Libano" class="navbar-logo">
-    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-    <div class="navbar-links">
-        <span>{{ request.user.username }} {% if not is_admin %} – {{ request.user.groups.first.name }} {% else %} – Admin {% endif %}</span>
-        <a href="{% url 'logout' %}">Sair</a>
-    </div>
+  <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" 
+       alt="Faculdade Libano" class="navbar-logo">
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+  <div class="navbar-links">
+    <!-- Avatar do usuário -->
+    <img src="{% if request.user.profile.image %}{{ request.user.profile.image.url }}{% else %}https://www.w3schools.com/howto/img_avatar.png{% endif %}" 
+         alt="Avatar" class="user-avatar">
+    
+    <!-- Nome do usuário e grupo -->
+    <span>
+      <strong>{{ request.user.username }}</strong>
+      {% if not is_admin %}
+        – <strong>{{ request.user.groups.first.name }}</strong>
+      {% else %}
+        – <strong>Admin</strong>
+      {% endif %}
+    </span>
+
+  <!-- Ícone de notificações -->
+<div id="notificacoes-dropdown">
+  <i class="fas fa-bell notificacao-icone" onclick="toggleNotificacoes()"></i>
+  <div id="notificacoes-container" class="notificacoes-dropdown">
+    <!-- notificações serão inseridas aqui via JS -->
+  </div>
 </div>
+    <!-- Logout -->
+    <a href="{% url 'logout' %}">Sair</a>
+  </div> <!-- fecha navbar-links -->
+</div> <!-- fecha navbar -->
 
 <div class="sidebar" id="sidebar">
   <!-- Início -->
@@ -310,6 +462,92 @@ function filtrarTabela(){
 
 searchInput.addEventListener('keyup', filtrarTabela);
 setorFilter.addEventListener('change', filtrarTabela);
+  function toggleNotificacoes() {
+    const container = document.getElementById('notificacoes-container');
+    container.style.display = container.style.display === 'block' ? 'none' : 'block';
+}
+// função que busca as notificações
+function atualizarNotificacoes() {
+    fetch("{% url 'notificacoes' %}")
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById('notificacoes-container');
+        const dropdown = document.getElementById('notificacoes-dropdown');
+        
+        container.innerHTML = ''; // limpa container
+
+        if (data.notificacoes.length === 0) {
+            container.innerHTML = '<p style="padding:10px;">Nenhuma notificação</p>';
+            dropdown.classList.remove('has-notifications'); // remove a bolinha
+        } else {
+            // adiciona a bolinha vermelha
+            dropdown.classList.add('has-notifications');
+
+            data.notificacoes.forEach(n => {
+                const div = document.createElement('div');
+                div.classList.add('notif-item');
+                div.style.padding = '10px';
+                div.style.borderBottom = '1px solid #eee';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                div.innerHTML = `
+                    <span>${n.mensagem}</span>
+                    <button style="background:#ea005f;color:white;border:none;padding:4px 8px;border-radius:3px;cursor:pointer;" onclick="marcarVista(${n.id})">✔</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+    });
+}
+
+
+// marcar notificação como vista
+function marcarVista(id) {
+    fetch("{% url 'marcar_vista' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: 'id=' + id
+    }).then(res => res.json())
+      .then(data => {
+        if(data.success){
+            atualizarNotificacoes();
+        } else {
+            alert(data.error);
+        }
+    });
+}
+
+// atualizar a cada 30 segundos
+setInterval(atualizarNotificacoes, 30000);
+window.onload = atualizarNotificacoes;
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('mobile-open');
+  }
+  document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.querySelector('.menu-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !menuToggle.contains(event.target)) {
+      sidebar.classList.remove('mobile-open');
+    }
+  });
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function() {
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth > 768) {
+        sidebar.classList.remove('mobile-open');
+      }
+    }, 250);
+  });
 </script>
 
 </body>

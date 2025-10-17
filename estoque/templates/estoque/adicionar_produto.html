@@ -5,9 +5,6 @@
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>Adicionar Produto</title>
     <style>
-        /* ESTILOS CONSISTENTES COM O DESIGN ANTERIOR */
-        
-        /* Reset e configurações base */
         * {
             margin: 0;
             padding: 0;
@@ -20,8 +17,6 @@
             background-color: #f8f9fa;
             color: #333;
         }
-
-        /* NAVBAR IDÊNTICA */
     .navbar {
       position: fixed;
       top: 0;
@@ -69,8 +64,6 @@
       background: rgba(251, 0, 0, 0.2);
       transform: translateY(-1px);
     }
-
-    /* Sidebar moderno com animações suaves */
     .sidebar {
       position: fixed;
       top: 60px;
@@ -458,19 +451,171 @@
 }
 .sidebar a i {
   margin-right: 8px; /* ajusta o espaço entre ícone e texto */
+}.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* deixa circular */
+  object-fit: cover;
+  margin-right: -14px;
 }
-    </style>
+/* Container principal das notificações */
+#notificacoes-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Ícone do sino */
+#notificacoes-dropdown .fa-bell {
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.3s ease;
+  padding: 8px;
+  border-radius: 50%;
+}
+
+#notificacoes-dropdown .fa-bell:hover {
+  color: #333;
+  background-color: #f5f5f5;
+  transform: scale(1.1);
+}
+
+/* Container das notificações */
+#notificacoes-container {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Indicador de notificações não lidas */
+#notificacoes-dropdown.has-notifications .fa-bell {
+  color: #007bff;
+  position: relative;
+}
+
+#notificacoes-dropdown.has-notifications .fa-bell::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  background-color: #ff4757;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+/* Estados do dropdown */
+#notificacoes-container.show {
+  display: block;
+}
+
+#notificacoes-container.hidden {
+  display: none;
+}
+
+/* Scrollbar personalizada */
+#notificacoes-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+#notificacoes-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0 8px 8px 0;
+}
+
+#notificacoes-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+#notificacoes-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+#notificacoes-dropdown.has-notifications .fa-bell::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  background-color: #ff4757;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+  #notificacoes-container {
+    width: 280px;
+    right: -50px;
+  }
+}
+
+/* Estado vazio */
+#notificacoes-container:empty::before {
+  content: "Nenhuma notificação";
+  display: block;
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-style: italic;
+}
+  </style>
 </head>
 <body>
-    <!-- NAVBAR -->
 <div class="navbar">
-    <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" alt="Faculdade Libano" class="navbar-logo">
-    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-    <div class="navbar-links">
-        <span>{{ request.user.username }} {% if not is_admin %} – {{ request.user.groups.first.name }} {% else %} – Admin {% endif %}</span>
-        <a href="{% url 'logout' %}">Sair</a>
-    </div>
+  <img src="https://faculdadelibano.edu.br/_next/image?url=%2Froot%2Flogo-website-colorida.webp&w=384&q=75" 
+       alt="Faculdade Libano" class="navbar-logo">
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+  <div class="navbar-links">
+    <!-- Avatar do usuário -->
+    <img src="{% if request.user.profile.image %}{{ request.user.profile.image.url }}{% else %}https://www.w3schools.com/howto/img_avatar.png{% endif %}" 
+         alt="Avatar" class="user-avatar">
+    
+    <!-- Nome do usuário e grupo -->
+    <span>
+      <strong>{{ request.user.username }}</strong>
+      {% if not is_admin %}
+        – <strong>{{ request.user.groups.first.name }}</strong>
+      {% else %}
+        – <strong>Admin</strong>
+      {% endif %}
+    </span>
+
+  <!-- Ícone de notificações -->
+<div id="notificacoes-dropdown">
+  <i class="fas fa-bell notificacao-icone" onclick="toggleNotificacoes()"></i>
+  <div id="notificacoes-container" class="notificacoes-dropdown">
+    <!-- notificações serão inseridas aqui via JS -->
+  </div>
 </div>
+    <!-- Logout -->
+    <a href="{% url 'logout' %}">Sair</a>
+  </div> <!-- fecha navbar-links -->
+</div> <!-- fecha navbar -->
 <div class="sidebar" id="sidebar">
 <a href="{% url 'index' %}"><i class="fas fa-home"></i> Início</a>
   {% if is_admin %}
@@ -534,9 +679,7 @@
 
             <form method="post">
                 {% csrf_token %}
-                
-                <!-- Campos do formulário Django com estilização -->
-                {% for field in form %}
+                                {% for field in form %}
                     <div class="form-group {% if field.field.required %}field-required{% endif %}">
                         {% if field.name == 'setor' and is_admin %}
                             <div class="campo-setor">
@@ -588,127 +731,160 @@
   <div class="spinner"></div>
   <p>Enviando para o banco de dados...</p>
 </div>
-    <script>
-          // Pegar elementos
+
+<script>
+  // === CONFIRMAÇÃO DE ENVIO DO FORMULÁRIO ===
   const form = document.querySelector('form');
   const modal = document.getElementById('confirmModal');
   const btnYes = document.getElementById('confirmYes');
   const btnNo = document.getElementById('confirmNo');
   const loadingOverlay = document.getElementById('loadingOverlay');
-  
-  // Intercepta submit do form
-  form.addEventListener('submit', function(e) {
-    e.preventDefault(); // não envia ainda
-    modal.style.display = 'block'; // mostra modal
-  });
 
-  // Cancelar modal
-  btnNo.addEventListener('click', function() {
-    modal.style.display = 'none';
-  });
+  if (form && modal && btnYes && btnNo && loadingOverlay) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      modal.style.display = 'block';
+    });
 
-  // Confirmar envio
-  btnYes.addEventListener('click', function() {
-    modal.style.display = 'none';
-    loadingOverlay.style.display = 'block'; // mostra loading
+    btnNo.addEventListener('click', function() {
+      modal.style.display = 'none';
+    });
 
-    // Envia form de verdade
-    // use setTimeout para simular tempo de BD (opcional)
-    setTimeout(() => {
-      form.submit();
-    }, 200); // você pode aumentar o delay se quiser ver o loading
-  });
-        // Mesma lógica JavaScript do primeiro código para responsividade
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('mobile-open');
-        }
+    btnYes.addEventListener('click', function() {
+      modal.style.display = 'none';
+      loadingOverlay.style.display = 'block';
+      setTimeout(() => form.submit(), 200);
+    });
+  }
 
-        // Fechar sidebar ao clicar fora (mobile)
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const menuToggle = document.querySelector('.menu-toggle');
-            
-            if (window.innerWidth <= 768 && 
-                !sidebar.contains(event.target) && 
-                !menuToggle.contains(event.target)) {
-                sidebar.classList.remove('mobile-open');
-            }
-        });
+  // === MENU LATERAL (SIDEBAR) ===
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.toggle('mobile-open');
+  }
 
-        // Aplicar classes de estilo aos campos do formulário Django
-        document.addEventListener('DOMContentLoaded', function() {
-            // Aplicar classe form-control a todos os inputs, selects e textareas
-            const formFields = document.querySelectorAll('input, select, textarea');
-            formFields.forEach(field => {
-                field.classList.add('form-control');
-            });
-
-            // Adicionar placeholders se não existirem
-            formFields.forEach(field => {
-                if (!field.getAttribute('placeholder') && field.type !== 'submit') {
-                    const label = document.querySelector(`label[for="${field.id}"]`);
-                    if (label) {
-                        field.setAttribute('placeholder', `Digite ${label.textContent.toLowerCase()}`);
-                    }
-                }
-            });
-
-            // Focar no primeiro campo do formulário
-            const firstField = document.querySelector('input:not([type="hidden"]), select, textarea');
-            if (firstField) {
-                firstField.focus();
-            }
-
-            // Validação em tempo real para campos numéricos
-            const quantityField = document.querySelector('input[type="number"]');
-            if (quantityField) {
-                quantityField.addEventListener('input', function(e) {
-                    if (e.target.value < 0) {
-                        e.target.value = 0;
-                    }
-                });
-            }
-        });
-
-        // Otimização de performance: debounce para resize
-        let resizeTimeout;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(function() {
-                const sidebar = document.getElementById('sidebar');
-                if (window.innerWidth > 768) {
-                    sidebar.classList.remove('mobile-open');
-                }
-            }, 250);
-        });
-document.addEventListener('DOMContentLoaded', () => {
-    const sidebarLinks = document.querySelectorAll('.sidebar a');
-    let currentPath = window.location.pathname;
-
-    // Remove barra final, se houver
-    if (currentPath.length > 1 && currentPath.endsWith('/')) {
-        currentPath = currentPath.slice(0, -1);
+  // Fecha sidebar ao clicar fora (mobile)
+  document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.querySelector('.menu-toggle');
+    if (
+      sidebar &&
+      menuToggle &&
+      window.innerWidth <= 768 &&
+      !sidebar.contains(event.target) &&
+      !menuToggle.contains(event.target)
+    ) {
+      sidebar.classList.remove('mobile-open');
     }
+  });
+
+  // === APLICAÇÃO DE ESTILOS E PLACEHOLDERS NOS CAMPOS DO FORMULÁRIO ===
+  document.addEventListener('DOMContentLoaded', function() {
+    const formFields = document.querySelectorAll('input, select, textarea');
+    formFields.forEach(field => {
+      field.classList.add('form-control');
+      if (!field.getAttribute('placeholder') && field.type !== 'submit') {
+        const label = document.querySelector(`label[for="${field.id}"]`);
+        if (label) field.setAttribute('placeholder', `Digite ${label.textContent.toLowerCase()}`);
+      }
+    });
+
+    const firstField = document.querySelector('input:not([type="hidden"]), select, textarea');
+    if (firstField) firstField.focus();
+
+    const quantityField = document.querySelector('input[type="number"]');
+    if (quantityField) {
+      quantityField.addEventListener('input', e => {
+        if (e.target.value < 0) e.target.value = 0;
+      });
+    }
+  });
+
+  // === RESPONSIVIDADE: debounce no resize ===
+  let resizeTimeout; // <- apenas UMA vez declarada
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth > 768 && sidebar) {
+        sidebar.classList.remove('mobile-open');
+      }
+    }, 250);
+  });
+
+  // === MARCAR LINKS ATIVOS NO SIDEBAR ===
+  document.addEventListener('DOMContentLoaded', () => {
+    const sidebarLinks = document.querySelectorAll('.sidebar a');
+    let currentPath = window.location.pathname.replace(/\/$/, ''); // remove barra final
 
     sidebarLinks.forEach(link => {
-        // Remove active de todos
-        link.classList.remove('active');
-
-        let linkPath = link.getAttribute('href');
-
-        // Remove barra final do link também
-        if (linkPath.length > 1 && linkPath.endsWith('/')) {
-            linkPath = linkPath.slice(0, -1);
-        }
-
-        // Adiciona active se bater o caminho
-        if (linkPath === currentPath) {
-            link.classList.add('active');
-        }
+      link.classList.remove('active');
+      const linkPath = link.getAttribute('href').replace(/\/$/, '');
+      if (linkPath === currentPath) link.classList.add('active');
     });
-});
+  });
 
-    </script>
+  // === NOTIFICAÇÕES ===
+  function toggleNotificacoes() {
+    const container = document.getElementById('notificacoes-container');
+    if (container)
+      container.style.display = container.style.display === 'block' ? 'none' : 'block';
+  }
+
+  function atualizarNotificacoes() {
+    fetch("{% url 'notificacoes' %}")
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('notificacoes-container');
+        const dropdown = document.getElementById('notificacoes-dropdown');
+        if (!container || !dropdown) return;
+
+        container.innerHTML = '';
+
+        if (data.notificacoes.length === 0) {
+          container.innerHTML = '<p style="padding:10px;">Nenhuma notificação</p>';
+          dropdown.classList.remove('has-notifications');
+        } else {
+          dropdown.classList.add('has-notifications');
+          data.notificacoes.forEach(n => {
+            const div = document.createElement('div');
+            div.classList.add('notif-item');
+            div.style.cssText = `
+              padding:10px;
+              border-bottom:1px solid #eee;
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+            `;
+            div.innerHTML = `
+              <span>${n.mensagem}</span>
+              <button style="background:#ea005f;color:white;border:none;padding:4px 8px;border-radius:3px;cursor:pointer;" onclick="marcarVista(${n.id})">✔</button>
+            `;
+            container.appendChild(div);
+          });
+        }
+      });
+  }
+
+  function marcarVista(id) {
+    fetch("{% url 'marcar_vista' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: 'id=' + id
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) atualizarNotificacoes();
+        else alert(data.error);
+      });
+  }
+
+  setInterval(atualizarNotificacoes, 30000);
+  window.onload = atualizarNotificacoes;
+</script>
+
 </body>
 </html>
